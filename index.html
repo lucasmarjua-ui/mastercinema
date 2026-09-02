@@ -11,7 +11,14 @@
   <main class="cinema-shell">
     <header class="topbar">
       <a class="brand" href="./index.html">MASTER<span>CINEMA</span></a>
-      <span class="eyebrow">Trivia de cine · Gran estreno</span>
+      <div class="header-actions">
+        <span class="wallet-pill"><span class="reel-coin" aria-hidden="true"></span><span id="wallet-count">0</span> bobinas</span>
+        <button id="sound-toggle" class="icon-btn" type="button">Sonido: ON</button>
+        <span id="player-name" class="player-name" hidden></span>
+        <button id="ranking-open" class="icon-btn" type="button">Ranking</button>
+        <button id="login-open" class="icon-btn" type="button">Iniciar sesión</button>
+        <button id="logout" class="icon-btn" type="button" hidden>Cerrar sesión</button>
+      </div>
     </header>
     <div class="reel-divider" aria-hidden="true"></div>
     <section class="hero">
@@ -44,18 +51,158 @@
         </button>
       </div>
     </section>
+    <section class="theme-shop">
+      <div class="section-heading"><h2>Tienda de temas</h2></div>
+      <div class="theme-grid" id="theme-grid"></div>
+    </section>
     <div class="reel-divider" aria-hidden="true"></div>
     <footer class="footer">
       <span>MASTERCINEMA © 2026</span>
       <span>10 preguntas · 15 segundos cada una</span>
     </footer>
   </main>
-  <script>
+
+  <div class="modal-backdrop" id="login-modal" hidden>
+    <form class="modal-card" id="login-form">
+      <button class="modal-close" id="login-close" type="button">X</button>
+      <h2>Iniciar sesión</h2>
+      <label>Nombre de usuario<input id="auth-username" type="text" required minlength="3" maxlength="16" pattern="[a-zA-Z0-9_]+" autocomplete="username" placeholder="solo letras, números y _"></label>
+      <label>Contraseña<input id="auth-password" type="password" required minlength="6" autocomplete="current-password"></label>
+      <p id="auth-error" class="modal-error"></p>
+      <button id="auth-submit" class="btn btn-gold" type="submit">Iniciar sesión</button>
+      <button id="auth-switch" class="btn btn-ghost" type="button">Crear cuenta</button>
+      <button id="guest-continue" class="btn btn-ghost" type="button">Continuar como invitado</button>
+    </form>
+  </div>
+
+  <div class="modal-backdrop" id="ranking-modal" hidden>
+    <section class="modal-card">
+      <button class="modal-close" id="ranking-close" type="button">X</button>
+      <h2>Ranking global</h2>
+      <select id="ranking-category" class="ranking-select"></select>
+      <p id="ranking-message" class="modal-error"></p>
+      <table class="lb-table">
+        <thead><tr><th>#</th><th>Jugador</th><th>Puntos</th></tr></thead>
+        <tbody id="ranking-body"></tbody>
+      </table>
+    </section>
+  </div>
+
+  <script type="module">
+    import { QUESTIONS } from './shared/questions.js';
+    import { Wallet } from './shared/wallet.js';
+    import { THEMES, getThemeState, buyTheme, equipTheme, applyTheme } from './shared/themes.js';
+    import { Audio } from './shared/audio.js';
+    import { loginUser, registerUser, logoutUser, onUserChange, getCurrentUser } from './shared/auth.js';
+    import { getTopScores } from './shared/leaderboard.js';
+
+    applyTheme();
+
     document.querySelectorAll('[data-category]').forEach(button => {
       button.addEventListener('click', () => {
         window.location.href = `./game.html?cat=${button.dataset.category}`;
       });
     });
+
+    const walletCount = document.querySelector('#wallet-count');
+    const renderWallet = () => { walletCount.textContent = Wallet.get(); };
+    renderWallet();
+    window.addEventListener('walletchange', renderWallet);
+
+    const themeGrid = document.querySelector('#theme-grid');
+    const renderThemes = () => {
+      const state = getThemeState();
+      themeGrid.innerHTML = THEMES.map(theme => {
+        const owned = state.owned.includes(theme.id);
+        const equipped = state.equipped === theme.id;
+        const swatch = `linear-gradient(90deg, ${theme.swatch[0]} 0%, ${theme.swatch[0]} 34%, ${theme.swatch[1]} 34%, ${theme.swatch[1]} 67%, ${theme.swatch[2]} 67%)`;
+        return `<article class="theme-card">
+          ${theme.badge ? `<span class="theme-badge">${theme.badge}</span>` : ''}
+          <div class="theme-swatch" style="background:${swatch}"></div>
+          <h3>${theme.name}</h3>
+          <p>${theme.description}</p>
+          <p>${theme.cost ? `${theme.cost} bobinas` : 'Incluido'}</p>
+          <button type="button" data-theme-id="${theme.id}" class="${equipped ? 'equipped' : ''}" ${equipped ? 'disabled' : ''}>${equipped ? 'Equipado' : owned ? 'Equipar' : 'Comprar'}</button>
+        </article>`;
+      }).join('');
+      themeGrid.querySelectorAll('[data-theme-id]').forEach(button => button.addEventListener('click', () => {
+        const state = getThemeState();
+        const id = button.dataset.themeId;
+        if (state.owned.includes(id)) equipTheme(id); else buyTheme(id);
+        applyTheme();
+        renderThemes();
+        renderWallet();
+      }));
+    };
+    renderThemes();
+    window.addEventListener('cloudsync', () => { renderWallet(); renderThemes(); applyTheme(); });
+
+    const soundButton = document.querySelector('#sound-toggle');
+    const renderSound = () => { soundButton.textContent = `Sonido: ${Audio.isMuted() ? 'OFF' : 'ON'}`; };
+    renderSound();
+    soundButton.addEventListener('click', () => { Audio.toggleMute(); renderSound(); });
+
+    const loginModal = document.querySelector('#login-modal');
+    const loginForm = document.querySelector('#login-form');
+    let registerMode = false;
+    document.querySelector('#login-open').addEventListener('click', () => { loginModal.hidden = false; });
+    document.querySelector('#login-close').addEventListener('click', () => { loginModal.hidden = true; });
+    document.querySelector('#guest-continue').addEventListener('click', () => { loginModal.hidden = true; });
+    document.querySelector('#auth-switch').addEventListener('click', () => {
+      registerMode = !registerMode;
+      document.querySelector('#auth-submit').textContent = registerMode ? 'Crear cuenta' : 'Iniciar sesión';
+      document.querySelector('#auth-switch').textContent = registerMode ? 'Ya tengo cuenta' : 'Crear cuenta';
+    });
+    const AUTH_ERROR_MESSAGES = {
+      'auth/email-already-in-use': 'Ese nombre de usuario ya existe',
+      'auth/invalid-username': 'Nombre de usuario inválido (3-16 caracteres, sin espacios)',
+      'auth/invalid-credential': 'Usuario o contraseña incorrectos',
+      'auth/wrong-password': 'Usuario o contraseña incorrectos',
+      'auth/user-not-found': 'Usuario o contraseña incorrectos'
+    };
+    loginForm.addEventListener('submit', async event => {
+      event.preventDefault();
+      const username = document.querySelector('#auth-username').value;
+      const password = document.querySelector('#auth-password').value;
+      const error = document.querySelector('#auth-error');
+      error.textContent = '';
+      try {
+        if (registerMode) await registerUser(username, password); else await loginUser(username, password);
+        loginModal.hidden = true;
+      } catch (authError) {
+        error.textContent = AUTH_ERROR_MESSAGES[authError.code] || authError.code?.replace('auth/', '').replaceAll('-', ' ') || 'No se pudo acceder';
+      }
+    });
+    document.querySelector('#logout').addEventListener('click', logoutUser);
+    onUserChange(user => {
+      const loggedIn = Boolean(user);
+      const nameLabel = document.querySelector('#player-name');
+      nameLabel.textContent = loggedIn ? (user.displayName || 'JUGADOR') : '';
+      nameLabel.hidden = !loggedIn;
+      document.querySelector('#login-open').hidden = loggedIn;
+      document.querySelector('#logout').hidden = !loggedIn;
+    });
+
+    const rankingModal = document.querySelector('#ranking-modal');
+    const rankingCategory = document.querySelector('#ranking-category');
+    const rankingBody = document.querySelector('#ranking-body');
+    const rankingMessage = document.querySelector('#ranking-message');
+    rankingCategory.innerHTML = Object.entries(QUESTIONS).map(([key, value]) => `<option value="${key}">${value.label}</option>`).join('');
+    const renderRanking = async () => {
+      if (!getCurrentUser()) { rankingBody.innerHTML = ''; rankingMessage.textContent = 'Inicia sesión para aparecer en el ranking'; return; }
+      rankingMessage.textContent = 'Cargando...';
+      try {
+        const rows = await getTopScores(rankingCategory.value);
+        rankingMessage.textContent = rows.length ? '' : 'Todavía no hay puntuaciones';
+        rankingBody.innerHTML = rows.map((row, index) => `<tr><td>${index + 1}</td><td>${row.username}</td><td>${row.score}</td></tr>`).join('');
+      } catch {
+        rankingBody.innerHTML = '';
+        rankingMessage.textContent = 'No se pudo cargar el ranking';
+      }
+    };
+    document.querySelector('#ranking-open').addEventListener('click', () => { rankingModal.hidden = false; renderRanking(); });
+    rankingCategory.addEventListener('change', renderRanking);
+    document.querySelector('#ranking-close').addEventListener('click', () => { rankingModal.hidden = true; });
   </script>
 </body>
 </html>

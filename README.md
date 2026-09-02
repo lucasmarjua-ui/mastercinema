@@ -22,20 +22,60 @@ Luego visita `http://localhost:8000`.
 ## Cómo se juega
 
 1. En la pantalla de inicio, elige una de las cuatro categorías: **Directores**, **Actores y Personajes**, **Frases Icónicas** o **Años de Estreno**.
-2. Responde una ronda de 10 preguntas de opción múltiple, elegidas al azar del banco de esa categoría. Cada pregunta tiene un temporizador de 15 segundos: si se agota, cuenta como fallo.
-3. Cada acierto suma puntos (entre 50 y 150, según la rapidez de la respuesta); los fallos no restan puntos.
-4. Al terminar las 10 preguntas aparece la pantalla de resultados con aciertos, fallos y puntuación total, con botones para jugar de nuevo o cambiar de categoría.
+2. Responde una ronda de 10 preguntas de opción múltiple, elegidas al azar del banco de esa categoría. Cada pregunta tiene un temporizador de 15 segundos (con tic-tac en los últimos 5) y una cortinilla de cine al pasar a la siguiente: si se agota el tiempo, cuenta como fallo.
+3. Cada acierto suma puntos (entre 50 y 150, según la rapidez de la respuesta) y reproduce un aplauso con destello dorado; cada fallo suena a buzzer/gong, sacude el botón en rojo y muestra la respuesta correcta. Los fallos no restan puntos.
+4. Al terminar las 10 preguntas aparece la pantalla de resultados con aciertos, fallos, puntuación y **bobinas** ganadas (la moneda del juego, según la puntuación), con botones para jugar de nuevo, cambiar de categoría o ver tus **logros**.
+5. Las bobinas se gastan en la **tienda de temas** de la pantalla de inicio: 4 paletas visuales completas para equipar.
+6. Si inicias sesión (nombre de usuario y contraseña), tu progreso se sincroniza en la nube y tus mejores puntuaciones entran al **ranking global** por categoría.
 
 ## Arquitectura
 
 ```text
-index.html                 Pantalla de inicio y selección de categoría
-game.html                  Pantalla de juego: preguntas, temporizador y resultados
-shared/theme.css           Paleta, tipografía y layout responsive (mobile-first)
+index.html                 Pantalla de inicio, categorías, tienda de temas, login y ranking
+game.html                  Pantalla de juego: preguntas, temporizador, resultados y logros
+shared/theme.css           Paleta, tipografía, layout responsive y temas visuales completos
 shared/questions.js        Banco de preguntas por categoría
 shared/quiz-engine.js      Selección de preguntas, orden de opciones y puntuación
+shared/audio.js            Aplausos, buzzer y tic-tac sintetizados con Web Audio API
+shared/wallet.js           Monedero de "bobinas" persistido en localStorage
+shared/themes.js           Catálogo de temas visuales, compra y equipamiento
+shared/achievements.js     Estadísticas y logros (bronce/plata/oro) por categoría
+shared/firebase-config.js  Configuración e inicialización del SDK Firebase CDN
+shared/auth.js             Registro, login con usuario/contraseña, invitado y sincronización Firestore
+shared/leaderboard.js      Envío y lectura del ranking global en Firestore
+firestore.rules            Reglas de seguridad del proyecto Firebase (referencia, se pegan en la consola)
 .github/workflows/deploy.yaml   Publicación en GitHub Pages en cada push a main
 ```
+
+## Sonido y sensación de juego
+
+Todos los efectos se sintetizan en tiempo real con la Web Audio API (`shared/audio.js`), sin archivos de audio externos: un aplauso (ráfagas de ruido filtrado) al acertar, un buzzer/gong grave (dos osciladores desafinados) al fallar, y un tic-tac que arranca en los últimos 5 segundos de cada pregunta. El botón **Sonido** silencia todo. Al acertar, el botón elegido destella en dorado (`flash-gold`); al fallar, tiembla en rojo (`shake-wrong`) y se resalta la respuesta correcta. Entre preguntas, y al pasar de la ronda a resultados, se reproduce una cortinilla de cine (`.wipe-bar`): una barra oscura que barre la pantalla de lado a lado mientras cambia el contenido debajo.
+
+## Bobinas y tienda de temas
+
+Cada partida entrega bobinas según la puntuación conseguida (`reelsForScore` en `shared/wallet.js`). La tienda de `index.html` ofrece 4 temas visuales completos —no solo un color de acento, sino toda la paleta vía variables CSS en `[data-theme="id"]`—: **Hollywood Dorado** (incluido), **Autocine Neón** (15 bobinas), **Cine Mudo B/N** (20 bobinas, con grano de película y parpadeo de proyector) y **Estreno Blockbuster** (30 bobinas, exclusivo, con flashes de cámaras al equiparlo).
+
+## Logros
+
+`shared/achievements.js` deriva 12 logros (3 por categoría, bronce/plata/oro) a partir de estadísticas acumuladas en `localStorage`, nunca de flags guardados aparte. Incluye una racha global entre categorías y un logro meta (oro de Años de Estreno = oro en las otras tres categorías). El botón **Ver logros** de la pantalla de resultados abre el detalle de conseguidos y pendientes.
+
+## Cuentas y ranking global (Firebase)
+
+MasterCinema usa un proyecto Firebase propio (`mastercinema-trivia`, Authentication + Firestore), independiente de cualquier otro proyecto. Funciona como invitado sin registro: las bobinas, el tema equipado, las estadísticas y los logros se guardan en `localStorage`. Desde **Iniciar sesión** se puede crear una cuenta o entrar con **nombre de usuario y contraseña** (por debajo usa Firebase Authentication con un email generado internamente a partir del nombre de usuario, `usuario@mastercinema.local`; nunca se pide ni se muestra un email real). Al entrar, el progreso local se fusiona con el documento `users/{uid}` de Firestore.
+
+Al terminar una partida con sesión iniciada, si la puntuación supera la guardada, se envía a `leaderboards/{categoria}/entries/{uid}`. La pantalla **Ranking** (botón en la cabecera de inicio) muestra el top 10 por categoría; como invitado se avisa que hace falta iniciar sesión para aparecer.
+
+### Configuración pendiente en la consola de Firebase
+
+El proyecto y la app web ya están creados (`mastercinema-trivia`), pero **Firestore y el proveedor de email/contraseña no se pueden activar por API ni por CLI** — Google exige un primer clic manual en la consola para cada uno. Sin estos dos pasos, el login y el ranking no funcionarán (el resto de la web sí):
+
+1. Abre la [consola de Firebase del proyecto](https://console.firebase.google.com/project/mastercinema-trivia/overview).
+2. **Firestore Database → Crear base de datos** (elige una región, por ejemplo `nam5`) — un solo clic, no hace falta configurar nada más.
+3. **Authentication → Comenzar → Sign-in method → Email/contraseña → Habilitar**.
+4. **Authentication → Settings → Authorized domains**: añade `lucasmarjua-ui.github.io` para que el login funcione también en GitHub Pages (además de `localhost`, que ya viene autorizado).
+5. **Firestore Database → Reglas**: pega el contenido de [`firestore.rules`](firestore.rules) y publica.
+
+Después de estos pasos, cuentas, sincronización y ranking funcionan sin tocar código.
 
 ### Cómo agregar preguntas
 
@@ -57,7 +97,7 @@ El sitio está disponible en `https://lucasmarjua-ui.github.io/mastercinema/`.
 
 ## Roadmap
 
-Ideas futuras: ampliar el banco de preguntas por categoría, modo contrarreloj global, tabla de mejores puntuaciones en `localStorage`, más categorías (bandas sonoras, carteles por siluetas).
+Ideas futuras: ampliar el banco de preguntas por categoría, más categorías (bandas sonoras, carteles por siluetas), notificaciones de logro recién desbloqueado durante la partida, perfil de jugador con historial de partidas.
 
 ## Licencia
 
