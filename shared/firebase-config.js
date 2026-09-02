@@ -1,7 +1,7 @@
 import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.13.0/firebase-app.js';
 
 export const firebaseConfig = {
-  apiKey: 'AIzaSyDFQkzbT5KjwRJV6jhqELeOp1jJ5ZQyDdY',
+  apiKey: 'AIzaSyAeLkAJwfj3UzAgExn35oP5EHAUoesU6QE',
   authDomain: 'mastercinema-trivia.firebaseapp.com',
   projectId: 'mastercinema-trivia',
   storageBucket: 'mastercinema-trivia.firebasestorage.app',
