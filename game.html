@@ -1,0 +1,161 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="MasterCinema: partida de trivia de cine contrarreloj.">
+  <title>MasterCinema / Partida</title>
+  <link rel="stylesheet" href="./shared/theme.css">
+</head>
+<body class="game-page">
+  <main class="cinema-shell">
+    <header class="topbar">
+      <a class="brand" href="./index.html">MASTER<span>CINEMA</span></a>
+      <a class="btn btn-ghost" href="./index.html">Cambiar categoría</a>
+    </header>
+    <section id="quiz-panel">
+      <div class="game-header">
+        <span class="pill" id="category-label">Categoría</span>
+        <span class="pill" id="question-counter">Pregunta 1/10</span>
+        <span class="pill" id="score-label">Puntos: 0</span>
+      </div>
+      <div class="timer-track"><div class="timer-fill" id="timer-fill"></div></div>
+      <div class="question-card">
+        <h2 id="question-text">Cargando pregunta...</h2>
+      </div>
+      <div class="answers-grid" id="answers-grid"></div>
+    </section>
+    <section class="results-panel" id="results-panel" hidden>
+      <span class="eyebrow">Fin de la función</span>
+      <h2>Resultados</h2>
+      <div class="results-stats">
+        <div class="stat-block"><strong id="result-correct">0</strong><span>Aciertos</span></div>
+        <div class="stat-block"><strong id="result-wrong">0</strong><span>Fallos</span></div>
+        <div class="stat-block"><strong id="result-score">0</strong><span>Puntuación</span></div>
+      </div>
+      <div class="results-actions">
+        <button class="btn btn-gold" id="play-again" type="button">Jugar de nuevo</button>
+        <a class="btn btn-ghost" href="./index.html">Cambiar categoría</a>
+      </div>
+    </section>
+    <footer class="footer">
+      <span>MASTERCINEMA © 2026</span>
+      <span>Responde antes de que se apague la luz</span>
+    </footer>
+  </main>
+  <script type="module">
+    import { QUESTIONS } from './shared/questions.js';
+    import { buildRound, computeScore, TIME_LIMIT_MS, ROUND_SIZE } from './shared/quiz-engine.js';
+
+    const params = new URLSearchParams(window.location.search);
+    const requested = params.get('cat');
+    const categoryKey = requested && QUESTIONS[requested] ? requested : 'directors';
+    const category = QUESTIONS[categoryKey];
+
+    const categoryLabel = document.querySelector('#category-label');
+    const questionCounter = document.querySelector('#question-counter');
+    const scoreLabel = document.querySelector('#score-label');
+    const timerFill = document.querySelector('#timer-fill');
+    const questionText = document.querySelector('#question-text');
+    const answersGrid = document.querySelector('#answers-grid');
+    const quizPanel = document.querySelector('#quiz-panel');
+    const resultsPanel = document.querySelector('#results-panel');
+    const resultCorrect = document.querySelector('#result-correct');
+    const resultWrong = document.querySelector('#result-wrong');
+    const resultScore = document.querySelector('#result-score');
+
+    categoryLabel.textContent = category.label;
+
+    let round = [];
+    let index = 0;
+    let score = 0;
+    let correctCount = 0;
+    let wrongCount = 0;
+    let timerId = null;
+    let deadline = 0;
+    let answered = false;
+
+    function startRound() {
+      round = buildRound(categoryKey, ROUND_SIZE);
+      index = 0;
+      score = 0;
+      correctCount = 0;
+      wrongCount = 0;
+      quizPanel.hidden = false;
+      resultsPanel.hidden = true;
+      showQuestion();
+    }
+
+    function showQuestion() {
+      answered = false;
+      const current = round[index];
+      questionCounter.textContent = `Pregunta ${index + 1}/${round.length}`;
+      scoreLabel.textContent = `Puntos: ${score}`;
+      questionText.textContent = current.question;
+      answersGrid.innerHTML = '';
+      current.options.forEach(option => {
+        const button = document.createElement('button');
+        button.type = 'button';
+        button.className = 'answer-btn';
+        button.textContent = option;
+        button.addEventListener('click', () => handleAnswer(option, button));
+        answersGrid.appendChild(button);
+      });
+      startTimer();
+    }
+
+    function startTimer() {
+      clearInterval(timerId);
+      deadline = Date.now() + TIME_LIMIT_MS;
+      timerFill.style.width = '100%';
+      timerFill.classList.remove('warning');
+      timerId = setInterval(() => {
+        const remaining = deadline - Date.now();
+        const pct = Math.max(0, remaining / TIME_LIMIT_MS) * 100;
+        timerFill.style.width = `${pct}%`;
+        if (pct < 30) timerFill.classList.add('warning');
+        if (remaining <= 0) {
+          clearInterval(timerId);
+          handleAnswer(null, null);
+        }
+      }, 100);
+    }
+
+    function handleAnswer(selected, button) {
+      if (answered) return;
+      answered = true;
+      clearInterval(timerId);
+      const current = round[index];
+      const remaining = Math.max(0, deadline - Date.now());
+      const isCorrect = selected === current.correctAnswer;
+      score += computeScore(isCorrect, remaining, TIME_LIMIT_MS);
+      if (isCorrect) correctCount++; else wrongCount++;
+      [...answersGrid.children].forEach(child => {
+        child.disabled = true;
+        if (child.textContent === current.correctAnswer) child.classList.add('correct');
+        else if (child === button) child.classList.add('wrong');
+      });
+      scoreLabel.textContent = `Puntos: ${score}`;
+      setTimeout(nextQuestion, 1200);
+    }
+
+    function nextQuestion() {
+      index++;
+      if (index >= round.length) showResults();
+      else showQuestion();
+    }
+
+    function showResults() {
+      quizPanel.hidden = true;
+      resultsPanel.hidden = false;
+      resultCorrect.textContent = correctCount;
+      resultWrong.textContent = wrongCount;
+      resultScore.textContent = score;
+    }
+
+    document.querySelector('#play-again').addEventListener('click', startRound);
+
+    startRound();
+  </script>
+</body>
+</html>

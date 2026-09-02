@@ -1,0 +1,61 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="MasterCinema: trivia de cine sobre directores, actores, frases icónicas y años de estreno.">
+  <title>MasterCinema / Trivia de Cine</title>
+  <link rel="stylesheet" href="./shared/theme.css">
+</head>
+<body>
+  <main class="cinema-shell">
+    <header class="topbar">
+      <a class="brand" href="./index.html">MASTER<span>CINEMA</span></a>
+      <span class="eyebrow">Trivia de cine · Gran estreno</span>
+    </header>
+    <div class="reel-divider" aria-hidden="true"></div>
+    <section class="hero">
+      <span class="eyebrow">¿Cuánto sabes de cine?</span>
+      <h1>Pon a prueba tu cinefilia</h1>
+      <p>Elige una categoría y responde 10 preguntas contrarreloj. Cuanto más rápido aciertes, más puntos ganas.</p>
+    </section>
+    <section>
+      <div class="section-heading"><h2>Elige tu categoría</h2></div>
+      <div class="category-grid" id="category-grid">
+        <button class="category-card" type="button" data-category="directors">
+          <span class="category-icon icon-clapper" aria-hidden="true"><span class="top"></span><span class="board"></span></span>
+          <h3>Directores</h3>
+          <p>¿Quién está detrás de la cámara en los grandes clásicos?</p>
+        </button>
+        <button class="category-card" type="button" data-category="actors">
+          <span class="category-icon icon-star" aria-hidden="true"></span>
+          <h3>Actores y Personajes</h3>
+          <p>Reconoce a las estrellas y a quiénes dieron vida a los íconos.</p>
+        </button>
+        <button class="category-card" type="button" data-category="quotes">
+          <span class="category-icon icon-quote" aria-hidden="true"></span>
+          <h3>Frases Icónicas</h3>
+          <p>Las líneas de diálogo que quedaron para la historia.</p>
+        </button>
+        <button class="category-card" type="button" data-category="years">
+          <span class="category-icon icon-reel" aria-hidden="true"></span>
+          <h3>Años de Estreno</h3>
+          <p>Ubica cada película en su año correcto.</p>
+        </button>
+      </div>
+    </section>
+    <div class="reel-divider" aria-hidden="true"></div>
+    <footer class="footer">
+      <span>MASTERCINEMA © 2026</span>
+      <span>10 preguntas · 15 segundos cada una</span>
+    </footer>
+  </main>
+  <script>
+    document.querySelectorAll('[data-category]').forEach(button => {
+      button.addEventListener('click', () => {
+        window.location.href = `./game.html?cat=${button.dataset.category}`;
+      });
+    });
+  </script>
+</body>
+</html>
