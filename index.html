@@ -49,11 +49,24 @@
           <h3>Años de Estreno</h3>
           <p>Ubica cada película en su año correcto.</p>
         </button>
+        <button class="category-card marathon-card" type="button" data-category="marathon">
+          <span class="icon-marathon" aria-hidden="true"><span class="flame"></span></span>
+          <span>
+            <span class="badge-infinite">RACHA INFINITA</span>
+            <h3>Modo Maratón</h3>
+            <p>Todas las categorías mezcladas, sin límite de preguntas. Sigue mientras aciertes: la racha multiplica tus puntos y 3 comodines te pueden salvar.</p>
+          </span>
+        </button>
       </div>
     </section>
     <section class="theme-shop">
       <div class="section-heading"><h2>Tienda de temas</h2></div>
       <div class="theme-grid" id="theme-grid"></div>
+    </section>
+    <section class="wildcard-shop">
+      <div class="section-heading"><h2>Tienda de comodines</h2></div>
+      <p style="margin:-6px 0 16px;opacity:.8;font-size:14px;">Cada comodín arranca con 1 uso por partida de Maratón. Compra usos extra permanentes con bobinas.</p>
+      <div class="wildcard-grid" id="wildcard-grid"></div>
     </section>
     <div class="reel-divider" aria-hidden="true"></div>
     <footer class="footer">
@@ -82,7 +95,7 @@
       <select id="ranking-category" class="ranking-select"></select>
       <p id="ranking-message" class="modal-error"></p>
       <table class="lb-table">
-        <thead><tr><th>#</th><th>Jugador</th><th>Puntos</th></tr></thead>
+        <thead><tr><th>#</th><th>Jugador</th><th id="ranking-score-label">Puntos</th></tr></thead>
         <tbody id="ranking-body"></tbody>
       </table>
     </section>
@@ -92,9 +105,10 @@
     import { QUESTIONS } from './shared/questions.js';
     import { Wallet } from './shared/wallet.js';
     import { THEMES, getThemeState, buyTheme, equipTheme, applyTheme } from './shared/themes.js';
+    import { WILDCARDS, getWildcardUpgrades, buyWildcardUpgrade } from './shared/wildcards.js';
     import { Audio } from './shared/audio.js';
     import { loginUser, registerUser, logoutUser, onUserChange, getCurrentUser } from './shared/auth.js';
-    import { getTopScores } from './shared/leaderboard.js';
+    import { getTopScores, MARATHON_STREAK_CATEGORY } from './shared/leaderboard.js';
 
     applyTheme();
 
@@ -135,7 +149,27 @@
       }));
     };
     renderThemes();
-    window.addEventListener('cloudsync', () => { renderWallet(); renderThemes(); applyTheme(); });
+
+    const wildcardGrid = document.querySelector('#wildcard-grid');
+    const renderWildcards = () => {
+      const upgrades = getWildcardUpgrades();
+      wildcardGrid.innerHTML = WILDCARDS.map(wildcard => {
+        const extra = upgrades[wildcard.id] || 0;
+        return `<article class="theme-card">
+          <h3>${wildcard.name}</h3>
+          <p>${wildcard.description}</p>
+          <p>Usos por partida: ${1 + extra}${extra ? ` (1 base + ${extra} comprado${extra > 1 ? 's' : ''})` : ' (base)'}</p>
+          <button type="button" data-wildcard-id="${wildcard.id}">Comprar uso extra · ${wildcard.cost} bobinas</button>
+        </article>`;
+      }).join('');
+      wildcardGrid.querySelectorAll('[data-wildcard-id]').forEach(button => button.addEventListener('click', () => {
+        buyWildcardUpgrade(button.dataset.wildcardId);
+        renderWildcards();
+        renderWallet();
+      }));
+    };
+    renderWildcards();
+    window.addEventListener('cloudsync', () => { renderWallet(); renderThemes(); renderWildcards(); applyTheme(); });
 
     const soundButton = document.querySelector('#sound-toggle');
     const renderSound = () => { soundButton.textContent = `Sonido: ${Audio.isMuted() ? 'OFF' : 'ON'}`; };
@@ -187,8 +221,10 @@
     const rankingCategory = document.querySelector('#ranking-category');
     const rankingBody = document.querySelector('#ranking-body');
     const rankingMessage = document.querySelector('#ranking-message');
-    rankingCategory.innerHTML = Object.entries(QUESTIONS).map(([key, value]) => `<option value="${key}">${value.label}</option>`).join('');
+    rankingCategory.innerHTML = Object.entries(QUESTIONS).map(([key, value]) => `<option value="${key}">${value.label}</option>`).join('')
+      + `<option value="${MARATHON_STREAK_CATEGORY}">Mejor racha (Maratón)</option>`;
     const renderRanking = async () => {
+      document.querySelector('#ranking-score-label').textContent = rankingCategory.value === MARATHON_STREAK_CATEGORY ? 'Racha' : 'Puntos';
       if (!getCurrentUser()) { rankingBody.innerHTML = ''; rankingMessage.textContent = 'Inicia sesión para aparecer en el ranking'; return; }
       rankingMessage.textContent = 'Cargando...';
       try {

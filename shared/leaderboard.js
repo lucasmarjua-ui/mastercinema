@@ -20,3 +20,9 @@ export async function getTopScores(category, max = 10) {
   const scores = await getDocs(query(collection(db, 'leaderboards', category, 'entries'), orderBy('score', 'desc'), limit(Math.max(1, Math.min(50, max)))));
   return scores.docs.map(entry => ({ username: entry.data().username || 'JUGADOR', score: Number(entry.data().score || 0) }));
 }
+
+// Ranking global de mejor racha del modo Maratón: misma colección genérica
+// `leaderboards/{categoria}/entries`, usando la racha como "score".
+export const MARATHON_STREAK_CATEGORY = 'marathon-streak';
+export async function submitMarathonStreak(streak) { return submitScore(MARATHON_STREAK_CATEGORY, streak); }
+export async function getMarathonLeaderboard(max = 10) { return getTopScores(MARATHON_STREAK_CATEGORY, max); }

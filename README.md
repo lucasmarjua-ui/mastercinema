@@ -27,6 +27,7 @@ Luego visita `http://localhost:8000`.
 4. Al terminar las 10 preguntas aparece la pantalla de resultados con aciertos, fallos, puntuación y **bobinas** ganadas (la moneda del juego, según la puntuación), con botones para jugar de nuevo, cambiar de categoría o ver tus **logros**.
 5. Las bobinas se gastan en la **tienda de temas** de la pantalla de inicio: 4 paletas visuales completas para equipar.
 6. Si inicias sesión (nombre de usuario y contraseña), tu progreso se sincroniza en la nube y tus mejores puntuaciones entran al **ranking global** por categoría.
+7. En **Modo Maratón** (quinta tarjeta, distinta a las demás) las preguntas de las 4 categorías se mezclan sin repetir hasta agotar el pool, sin número fijo de preguntas: sigues mientras aciertes. La racha multiplica tus puntos (x1, x1.5 desde 5, x2 desde 10, x3 desde 20) y tienes 3 comodines —**50:50**, **Pasar** y **Chivato**— para salvar una respuesta.
 
 ## Arquitectura
 
@@ -42,7 +43,8 @@ shared/themes.js           Catálogo de temas visuales, compra y equipamiento
 shared/achievements.js     Estadísticas y logros (bronce/plata/oro) por categoría
 shared/firebase-config.js  Configuración e inicialización del SDK Firebase CDN
 shared/auth.js             Registro, login con usuario/contraseña, invitado y sincronización Firestore
-shared/leaderboard.js      Envío y lectura del ranking global en Firestore
+shared/leaderboard.js      Envío y lectura del ranking global en Firestore (por categoría y de mejor racha)
+shared/wildcards.js        Catálogo de comodines de Maratón, usos base y compra de usos extra
 firestore.rules            Reglas de seguridad del proyecto Firebase (referencia, se pegan en la consola)
 .github/workflows/deploy.yaml   Publicación en GitHub Pages en cada push a main
 ```
@@ -57,7 +59,15 @@ Cada partida entrega bobinas según la puntuación conseguida (`reelsForScore` e
 
 ## Logros
 
-`shared/achievements.js` deriva 12 logros (3 por categoría, bronce/plata/oro) a partir de estadísticas acumuladas en `localStorage`, nunca de flags guardados aparte. Incluye una racha global entre categorías y un logro meta (oro de Años de Estreno = oro en las otras tres categorías). El botón **Ver logros** de la pantalla de resultados abre el detalle de conseguidos y pendientes.
+`shared/achievements.js` deriva 16 logros (12 por categoría clásica, bronce/plata/oro, más 4 de Maratón) a partir de estadísticas acumuladas en `localStorage`, nunca de flags guardados aparte. Incluye una racha global entre categorías y un logro meta (oro de Años de Estreno = oro en las otras tres categorías). El botón **Ver logros** de la pantalla de resultados abre el detalle de conseguidos y pendientes.
+
+## Modo Maratón y comodines
+
+`shared/quiz-engine.js` expone `createMarathonDeck()` (mazo con las 4 categorías mezcladas, sin repetir hasta agotar el pool) y `computeMarathonScore()` (puntuación base multiplicada según la racha: x1 de 0 a 4, x1.5 de 5 a 9, x2 de 10 a 19, x3 desde 20). El destello de combo (`Audio.playCombo`) se intensifica en esos mismos tramos, y un destello de confeti (`spawnConfetti` en `game.html`) más un arpegio (`Audio.playRecord`) celebran cada vez que se supera el récord personal de racha (`stats.marathon.bestStreak`, sincronizado en Firestore igual que el resto de estadísticas).
+
+Cada partida arranca con 1 uso de cada comodín (`shared/wildcards.js`): **50:50** (elimina 2 respuestas incorrectas), **Pasar** (descarta la pregunta sin romper la racha) y **Chivato** (resalta la respuesta correcta; cuenta como acierto pero con puntos base reducidos a la mitad, sin bonus por rapidez). La **tienda de comodines** de `index.html` vende usos extra permanentes (10 bobinas cada uno) que se suman al uso base en cada partida nueva.
+
+Al fallar sin comodín que salve la respuesta termina la partida y aparece el **resumen de Maratón**: racha final, puntos, comodines usados, bobinas ganadas, aviso de nuevo récord si corresponde, y un botón **Compartir resultado** que copia al portapapeles un texto tipo "He conseguido una racha de X en MasterCinema 🎬🔥". La mejor racha también se envía a un ranking global propio (categoría `marathon-streak` en `leaderboards/`), visible desde el selector de la pantalla **Ranking**.
 
 ## Cuentas y ranking global (Firebase)
 

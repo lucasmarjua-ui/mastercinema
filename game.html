@@ -21,7 +21,13 @@
       <div class="game-header">
         <span class="pill" id="category-label">Categoría</span>
         <span class="pill" id="question-counter">Pregunta 1/10</span>
+        <span class="pill streak-badge" id="streak-badge" hidden><span class="streak-flame" aria-hidden="true"></span><span id="streak-count">0</span> racha · x<span id="streak-multiplier">1</span></span>
         <span class="pill" id="score-label">Puntos: 0</span>
+      </div>
+      <div class="wildcard-bar" id="wildcard-bar" hidden>
+        <button class="wildcard-btn" id="wc-fifty" type="button">50:50 <span class="count" id="wc-fifty-count">1</span></button>
+        <button class="wildcard-btn" id="wc-skip" type="button">Pasar <span class="count" id="wc-skip-count">1</span></button>
+        <button class="wildcard-btn" id="wc-reveal" type="button">Chivato <span class="count" id="wc-reveal-count">1</span></button>
       </div>
       <div class="timer-track"><div class="timer-fill" id="timer-fill"></div></div>
       <div class="question-card">
@@ -45,6 +51,24 @@
         <button class="trophy-btn" id="trophy-open" type="button">Ver logros</button>
       </div>
     </section>
+    <section class="results-panel" id="marathon-summary" hidden>
+      <span class="eyebrow">Se acabó la racha</span>
+      <h2>Resumen de Maratón</h2>
+      <p id="marathon-record-banner" class="new-record-banner" hidden>¡Nuevo récord de racha!</p>
+      <div class="results-stats">
+        <div class="stat-block"><strong id="marathon-final-streak">0</strong><span>Racha final</span></div>
+        <div class="stat-block"><strong id="marathon-final-score">0</strong><span>Puntuación</span></div>
+        <div class="stat-block"><strong id="marathon-wildcards-used">0</strong><span>Comodines usados</span></div>
+        <div class="stat-block"><strong id="marathon-reels">0</strong><span>Bobinas ganadas</span></div>
+      </div>
+      <p id="marathon-leaderboard-note" class="modal-error" style="color:var(--gold-bright)"></p>
+      <div class="results-actions">
+        <button class="btn btn-gold" id="marathon-play-again" type="button">Jugar de nuevo</button>
+        <a class="btn btn-ghost" href="./index.html">Cambiar categoría</a>
+        <button class="trophy-btn" id="marathon-trophy-open" type="button">Ver logros</button>
+        <button class="btn btn-ghost" id="marathon-share" type="button">Compartir resultado</button>
+      </div>
+    </section>
     <footer class="footer">
       <span>MASTERCINEMA © 2026</span>
       <span>Responde antes de que se apague la luz</span>
@@ -62,20 +86,22 @@
 
   <script type="module">
     import { QUESTIONS } from './shared/questions.js';
-    import { buildRound, computeScore, TIME_LIMIT_MS, ROUND_SIZE } from './shared/quiz-engine.js';
+    import { buildRound, computeScore, TIME_LIMIT_MS, ROUND_SIZE, createMarathonDeck, marathonMultiplier, computeMarathonScore, shuffle } from './shared/quiz-engine.js';
     import { Wallet, reelsForScore } from './shared/wallet.js';
     import { applyTheme } from './shared/themes.js';
+    import { WILDCARDS, getStartingUses } from './shared/wildcards.js';
     import { Audio } from './shared/audio.js';
-    import { loadStats, saveStats, recordAnswer, recordRoundEnd, getAchievementState, ACHIEVEMENTS } from './shared/achievements.js';
+    import { loadStats, saveStats, recordAnswer, recordRoundEnd, recordMarathonRun, getAchievementState, ACHIEVEMENTS } from './shared/achievements.js';
     import { getCurrentUser } from './shared/auth.js';
-    import { submitScore } from './shared/leaderboard.js';
+    import { submitScore, submitMarathonStreak } from './shared/leaderboard.js';
 
     applyTheme();
 
     const params = new URLSearchParams(window.location.search);
     const requested = params.get('cat');
-    const categoryKey = requested && QUESTIONS[requested] ? requested : 'directors';
-    const category = QUESTIONS[categoryKey];
+    const isMarathon = requested === 'marathon';
+    const categoryKey = isMarathon ? 'marathon' : (requested && QUESTIONS[requested] ? requested : 'directors');
+    const category = isMarathon ? { label: 'Modo Maratón' } : QUESTIONS[categoryKey];
 
     const categoryLabel = document.querySelector('#category-label');
     const questionCounter = document.querySelector('#question-counter');
@@ -92,6 +118,23 @@
     const leaderboardNote = document.querySelector('#leaderboard-note');
     const wipeBar = document.querySelector('#wipe-bar');
     const walletCount = document.querySelector('#wallet-count');
+    const streakBadge = document.querySelector('#streak-badge');
+    const streakCountEl = document.querySelector('#streak-count');
+    const streakMultiplierEl = document.querySelector('#streak-multiplier');
+    const wildcardBar = document.querySelector('#wildcard-bar');
+    const wcFiftyBtn = document.querySelector('#wc-fifty');
+    const wcSkipBtn = document.querySelector('#wc-skip');
+    const wcRevealBtn = document.querySelector('#wc-reveal');
+    const wcFiftyCount = document.querySelector('#wc-fifty-count');
+    const wcSkipCount = document.querySelector('#wc-skip-count');
+    const wcRevealCount = document.querySelector('#wc-reveal-count');
+    const marathonSummary = document.querySelector('#marathon-summary');
+    const marathonRecordBanner = document.querySelector('#marathon-record-banner');
+    const marathonFinalStreak = document.querySelector('#marathon-final-streak');
+    const marathonFinalScore = document.querySelector('#marathon-final-score');
+    const marathonWildcardsUsed = document.querySelector('#marathon-wildcards-used');
+    const marathonReels = document.querySelector('#marathon-reels');
+    const marathonLeaderboardNote = document.querySelector('#marathon-leaderboard-note');
 
     categoryLabel.textContent = category.label;
 
@@ -249,9 +292,230 @@
 
     document.querySelector('#play-again').addEventListener('click', startRound);
 
+    // ============ Modo Maratón ============
+    let deck = null;
+    let marathonQuestion = null;
+    let streak = 0;
+    let marathonScore = 0;
+    let wildcardUses = { fifty: 0, skip: 0, reveal: 0 };
+    let wildcardsUsedThisGame = new Set();
+    let cleanStreakMax = 0;
+    let usedAnyWildcardThisGame = false;
+    let marathonTimerId = null;
+    let marathonDeadline = 0;
+    let marathonAnswered = false;
+    let questionsAnswered = 0;
+
+    function spawnConfetti() {
+      const colors = ['#d4af37', '#f3d675', '#c62841', '#f6ead9'];
+      for (let i = 0; i < 28; i++) {
+        const piece = document.createElement('div');
+        piece.className = 'confetti-piece';
+        piece.style.left = `${Math.random() * 100}%`;
+        piece.style.background = colors[Math.floor(Math.random() * colors.length)];
+        piece.style.animationDuration = `${1 + Math.random() * 1.2}s`;
+        piece.style.animationDelay = `${Math.random() * 0.3}s`;
+        document.body.appendChild(piece);
+        piece.addEventListener('animationend', () => piece.remove(), { once: true });
+      }
+    }
+
+    function updateStreakBadge() {
+      streakCountEl.textContent = streak;
+      streakMultiplierEl.textContent = marathonMultiplier(streak);
+      const tier = streak >= 20 ? 3 : streak >= 10 ? 2 : streak >= 5 ? 1 : 0;
+      streakBadge.classList.remove('tier-1', 'tier-2', 'tier-3');
+      if (tier > 0) streakBadge.classList.add(`tier-${tier}`);
+      scoreLabel.textContent = `Puntos: ${marathonScore}`;
+    }
+
+    function renderWildcardButtons() {
+      wcFiftyCount.textContent = wildcardUses.fifty;
+      wcSkipCount.textContent = wildcardUses.skip;
+      wcRevealCount.textContent = wildcardUses.reveal;
+      wcFiftyBtn.disabled = marathonAnswered || wildcardUses.fifty <= 0;
+      wcSkipBtn.disabled = marathonAnswered || wildcardUses.skip <= 0;
+      wcRevealBtn.disabled = marathonAnswered || wildcardUses.reveal <= 0;
+    }
+
+    function renderMarathonOptions(options) {
+      answersGrid.innerHTML = '';
+      options.forEach(option => {
+        const button = document.createElement('button');
+        button.type = 'button';
+        button.className = 'answer-btn';
+        button.textContent = option;
+        button.addEventListener('click', () => handleMarathonAnswer(option, button));
+        answersGrid.appendChild(button);
+      });
+    }
+
+    function startMarathon() {
+      deck = createMarathonDeck();
+      streak = 0;
+      marathonScore = 0;
+      wildcardUses = getStartingUses();
+      wildcardsUsedThisGame = new Set();
+      cleanStreakMax = 0;
+      usedAnyWildcardThisGame = false;
+      questionsAnswered = 0;
+      questionCounter.textContent = 'Respondidas: 0';
+      leaderboardNote.textContent = '';
+      quizPanel.hidden = false;
+      resultsPanel.hidden = true;
+      marathonSummary.hidden = true;
+      streakBadge.hidden = false;
+      wildcardBar.hidden = false;
+      updateStreakBadge();
+      renderWildcardButtons();
+      showMarathonQuestion();
+    }
+
+    function showMarathonQuestion() {
+      marathonAnswered = false;
+      marathonQuestion = deck.next();
+      questionText.textContent = marathonQuestion.question;
+      renderMarathonOptions(marathonQuestion.options);
+      renderWildcardButtons();
+      startMarathonTimer();
+    }
+
+    function startMarathonTimer() {
+      clearInterval(marathonTimerId);
+      Audio.stopTick();
+      marathonDeadline = Date.now() + TIME_LIMIT_MS;
+      timerFill.style.width = '100%';
+      timerFill.classList.remove('warning');
+      marathonTimerId = setInterval(() => {
+        const remaining = marathonDeadline - Date.now();
+        const pct = Math.max(0, remaining / TIME_LIMIT_MS) * 100;
+        timerFill.style.width = `${pct}%`;
+        if (pct < 30) timerFill.classList.add('warning');
+        if (remaining <= 5000 && remaining > 0) Audio.startTick();
+        if (remaining <= 0) {
+          clearInterval(marathonTimerId);
+          Audio.stopTick();
+          handleMarathonAnswer(null, null);
+        }
+      }, 100);
+    }
+
+    function handleMarathonAnswer(selected, button, { assisted = false } = {}) {
+      if (marathonAnswered) return;
+      marathonAnswered = true;
+      clearInterval(marathonTimerId);
+      Audio.stopTick();
+      renderWildcardButtons();
+      const remaining = Math.max(0, marathonDeadline - Date.now());
+      const isCorrect = assisted || selected === marathonQuestion.correctAnswer;
+      const streakBeforeAnswer = streak;
+      questionsAnswered += 1;
+      questionCounter.textContent = `Respondidas: ${questionsAnswered}`;
+
+      [...answersGrid.children].forEach(child => {
+        child.disabled = true;
+        if (child.textContent === marathonQuestion.correctAnswer) {
+          child.classList.add('correct');
+          if (isCorrect && (assisted || child === button)) child.classList.add('flash-gold');
+        } else if (!assisted && child === button) {
+          child.classList.add('wrong', 'shake-wrong');
+        }
+      });
+
+      if (isCorrect) {
+        marathonScore += computeMarathonScore(remaining, streakBeforeAnswer, { assisted });
+        streak += 1;
+        if (!usedAnyWildcardThisGame) cleanStreakMax = Math.max(cleanStreakMax, streak);
+        updateStreakBadge();
+        Audio.playCorrect();
+        Audio.playCombo(streak);
+        if (stats.marathon.bestStreak > 0 && streak === stats.marathon.bestStreak + 1) {
+          spawnConfetti();
+          Audio.playRecord();
+        }
+        setTimeout(() => wipeTransition(showMarathonQuestion), 1200);
+      } else {
+        Audio.playWrong();
+        setTimeout(() => wipeTransition(endMarathon), 1200);
+      }
+    }
+
+    wcFiftyBtn.addEventListener('click', () => {
+      if (marathonAnswered || wildcardUses.fifty <= 0) return;
+      wildcardUses.fifty -= 1;
+      wildcardsUsedThisGame.add('fifty');
+      usedAnyWildcardThisGame = true;
+      renderWildcardButtons();
+      const wrongOptions = marathonQuestion.options.filter(option => option !== marathonQuestion.correctAnswer);
+      const keptWrong = wrongOptions[Math.floor(Math.random() * wrongOptions.length)];
+      const survivors = shuffle([marathonQuestion.correctAnswer, keptWrong]);
+      renderMarathonOptions(survivors);
+    });
+    wcSkipBtn.addEventListener('click', () => {
+      if (marathonAnswered || wildcardUses.skip <= 0) return;
+      marathonAnswered = true;
+      clearInterval(marathonTimerId);
+      Audio.stopTick();
+      wildcardUses.skip -= 1;
+      wildcardsUsedThisGame.add('skip');
+      usedAnyWildcardThisGame = true;
+      renderWildcardButtons();
+      wipeTransition(showMarathonQuestion);
+    });
+    wcRevealBtn.addEventListener('click', () => {
+      if (marathonAnswered || wildcardUses.reveal <= 0) return;
+      wildcardUses.reveal -= 1;
+      wildcardsUsedThisGame.add('reveal');
+      usedAnyWildcardThisGame = true;
+      handleMarathonAnswer(null, null, { assisted: true });
+    });
+
+    async function endMarathon() {
+      quizPanel.hidden = true;
+      marathonSummary.hidden = false;
+      streakBadge.hidden = true;
+      wildcardBar.hidden = true;
+
+      const isNewRecord = streak > stats.marathon.bestStreak;
+      recordMarathonRun(stats, { finalStreak: streak, noHelpStreak: cleanStreakMax, usedAllThree: wildcardsUsedThisGame.size >= 3 });
+      saveStats(stats);
+
+      marathonFinalStreak.textContent = streak;
+      marathonFinalScore.textContent = marathonScore;
+      marathonWildcardsUsed.textContent = wildcardsUsedThisGame.size;
+      marathonRecordBanner.hidden = !isNewRecord;
+
+      const reward = reelsForScore(marathonScore);
+      Wallet.add(reward);
+      marathonReels.textContent = reward;
+
+      const user = getCurrentUser();
+      if (user) {
+        try {
+          const improved = await submitMarathonStreak(streak);
+          marathonLeaderboardNote.textContent = improved ? 'Nueva mejor racha enviada al ranking global.' : 'Racha registrada (no superó tu mejor marca).';
+        } catch {
+          marathonLeaderboardNote.textContent = 'No se pudo enviar la racha al ranking.';
+        }
+      } else {
+        marathonLeaderboardNote.textContent = 'Inicia sesión para aparecer en el ranking global.';
+      }
+    }
+
+    document.querySelector('#marathon-play-again').addEventListener('click', startMarathon);
+    document.querySelector('#marathon-share').addEventListener('click', async () => {
+      const text = `He conseguido una racha de ${streak} en MasterCinema 🎬🔥`;
+      try {
+        await navigator.clipboard.writeText(text);
+        marathonLeaderboardNote.textContent = 'Resultado copiado al portapapeles.';
+      } catch {
+        marathonLeaderboardNote.textContent = text;
+      }
+    });
+
     const achievementModal = document.querySelector('#achievement-modal');
     const achievementList = document.querySelector('#achievement-list');
-    const CATEGORY_LABELS = Object.fromEntries(Object.entries(QUESTIONS).map(([key, value]) => [key, value.label]));
+    const CATEGORY_LABELS = { ...Object.fromEntries(Object.entries(QUESTIONS).map(([key, value]) => [key, value.label])), marathon: 'Modo Maratón' };
     function renderAchievements() {
       const state = getAchievementState(stats);
       let lastCategory = null;
@@ -262,9 +526,10 @@
       }).join('');
     }
     document.querySelector('#trophy-open').addEventListener('click', () => { renderAchievements(); achievementModal.hidden = false; });
+    document.querySelector('#marathon-trophy-open').addEventListener('click', () => { renderAchievements(); achievementModal.hidden = false; });
     document.querySelector('#achievement-close').addEventListener('click', () => { achievementModal.hidden = true; });
 
-    startRound();
+    if (isMarathon) startMarathon(); else startRound();
   </script>
 </body>
 </html>

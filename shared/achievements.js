@@ -16,18 +16,26 @@ export const ACHIEVEMENTS = [
   { id: 'quotes-gold', category: 'quotes', medal: 'gold', name: 'Guionista de Oro', description: 'Partida perfecta en Frases Icónicas con más de la mitad del tiempo restante de media.' },
   { id: 'years-bronze', category: 'years', medal: 'bronze', name: 'Cronista de Cine', description: 'Acierta 5 de 10 preguntas en Años de Estreno.' },
   { id: 'years-silver', category: 'years', medal: 'silver', name: 'Maratón sin Fallos', description: 'Encadena 7 aciertos seguidos, sin importar la categoría.' },
-  { id: 'years-gold', category: 'years', medal: 'gold', name: 'Leyenda de MasterCinema', description: 'Consigue el logro de oro en Directores, Actores y Frases Icónicas.' }
+  { id: 'years-gold', category: 'years', medal: 'gold', name: 'Leyenda de MasterCinema', description: 'Consigue el logro de oro en Directores, Actores y Frases Icónicas.' },
+  { id: 'marathon-fire', category: 'marathon', medal: 'bronze', name: 'Racha de Fuego', description: 'Alcanza una racha de 10 en el modo Maratón.' },
+  { id: 'marathon-noassist', category: 'marathon', medal: 'silver', name: 'Sin Ayuda', description: 'Alcanza una racha de al menos 10 en Maratón sin usar ningún comodín.' },
+  { id: 'marathon-strategist', category: 'marathon', medal: 'silver', name: 'Estratega', description: 'Usa los 3 comodines en una misma partida de Maratón.' },
+  { id: 'marathon-legend', category: 'marathon', medal: 'gold', name: 'Leyenda del Cine', description: 'Alcanza una racha de 25 en el modo Maratón.' }
 ];
 
 function defaultCategoryStats() {
   return { timesPlayed: 0, bestCorrect: 0, perfectRounds: 0, totalScore: 0, bestStreak: 0, streakRun: 0, fastestAnswerMs: null, perfectAvgRatioMax: 0 };
 }
 
+function defaultMarathonStats() {
+  return { gamesPlayed: 0, bestStreak: 0, noHelpBestStreak: 0, usedAllThreeInOneRun: false };
+}
+
 function defaultStats() {
   return CATEGORIES.reduce((stats, category) => {
     stats[category] = defaultCategoryStats();
     return stats;
-  }, { crossStreak: { current: 0, best: 0 } });
+  }, { crossStreak: { current: 0, best: 0 }, marathon: defaultMarathonStats() });
 }
 
 export function loadStats() {
@@ -36,6 +44,7 @@ export function loadStats() {
     const stats = defaultStats();
     CATEGORIES.forEach(category => { stats[category] = { ...stats[category], ...(value[category] || {}) }; });
     stats.crossStreak = { ...stats.crossStreak, ...(value.crossStreak || {}) };
+    stats.marathon = { ...stats.marathon, ...(value.marathon || {}) };
     return stats;
   } catch {
     return defaultStats();
@@ -78,6 +87,16 @@ export function recordRoundEnd(stats, { category, correctCount, totalCount, scor
   return stats;
 }
 
+// Se llama al terminar una partida de Maratón (al fallar sin comodín que la salve).
+export function recordMarathonRun(stats, { finalStreak, noHelpStreak, usedAllThree }) {
+  const marathon = stats.marathon;
+  marathon.gamesPlayed += 1;
+  marathon.bestStreak = Math.max(marathon.bestStreak, finalStreak);
+  marathon.noHelpBestStreak = Math.max(marathon.noHelpBestStreak, noHelpStreak);
+  if (usedAllThree) marathon.usedAllThreeInOneRun = true;
+  return stats;
+}
+
 export function getAchievementState(stats) {
   const goldDirectors = stats.directors.perfectRounds >= 1;
   const goldActors = stats.actors.totalScore >= 900;
@@ -94,7 +113,11 @@ export function getAchievementState(stats) {
     'quotes-gold': goldQuotes,
     'years-bronze': stats.years.bestCorrect >= 5,
     'years-silver': stats.crossStreak.best >= 7,
-    'years-gold': goldDirectors && goldActors && goldQuotes
+    'years-gold': goldDirectors && goldActors && goldQuotes,
+    'marathon-fire': stats.marathon.bestStreak >= 10,
+    'marathon-noassist': stats.marathon.noHelpBestStreak >= 10,
+    'marathon-strategist': stats.marathon.usedAllThreeInOneRun,
+    'marathon-legend': stats.marathon.bestStreak >= 25
   };
   return ACHIEVEMENTS.map(item => ({ ...item, unlocked: Boolean(unlockedById[item.id]) }));
 }

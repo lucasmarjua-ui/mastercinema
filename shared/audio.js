@@ -77,6 +77,19 @@ export const Audio = {
     tickTimer = undefined;
     this._ticking = false;
   },
+  // Combo de racha (modo Maratón): se intensifica cada 5 aciertos seguidos.
+  playCombo(streak) {
+    if (muted()) return;
+    const tier = streak >= 20 ? 3 : streak >= 10 ? 2 : streak >= 5 ? 1 : 0;
+    const baseFrequency = 520 + tier * 140;
+    tone({ frequency: baseFrequency, endFrequency: baseFrequency * 1.5, duration: 0.18 + tier * 0.05, type: 'triangle', gain: 0.06 + tier * 0.02 });
+    if (tier > 0) tone({ frequency: baseFrequency * 1.5, duration: 0.15, type: 'sine', delay: 0.09, gain: 0.05 });
+  },
+  // Arpegio ascendente al superar el récord personal de racha.
+  playRecord() {
+    if (muted()) return;
+    [0, 0.12, 0.24].forEach((delay, i) => tone({ frequency: 660 + i * 220, endFrequency: 1320 + i * 220, duration: 0.3, type: 'triangle', delay, gain: 0.08 }));
+  },
   toggleMute() {
     const next = !muted();
     localStorage.setItem(MUTE_KEY, next ? '1' : '0');
