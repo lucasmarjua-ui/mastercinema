@@ -185,6 +185,36 @@
     let answered = false;
     let stats = loadStats();
 
+    // Dibuja los botones de opción SIN marcar nunca cuál es la correcta: solo
+    // texto y un handler de clic. La única función que puede añadir `correct`/
+    // `wrong` al DOM es revealAnswer(), y solo se llama al resolver la
+    // pregunta (clic, tiempo agotado o comodín Chivato) — nunca al renderizar.
+    function renderOptions(options, onSelect) {
+      answersGrid.innerHTML = '';
+      options.forEach(option => {
+        const button = document.createElement('button');
+        button.type = 'button';
+        button.className = 'answer-btn';
+        button.textContent = option;
+        button.addEventListener('click', () => onSelect(option, button));
+        answersGrid.appendChild(button);
+      });
+    }
+
+    // Único punto del código que añade clases de feedback (correct/wrong) al
+    // DOM. Se invoca una vez, al resolver la pregunta, nunca al construirla.
+    function revealAnswer({ correctAnswer, selectedButton, isCorrect, assisted = false }) {
+      [...answersGrid.children].forEach(child => {
+        child.disabled = true;
+        if (child.textContent === correctAnswer) {
+          child.classList.add('correct');
+          if (isCorrect && (assisted || child === selectedButton)) child.classList.add('flash-gold');
+        } else if (!assisted && child === selectedButton) {
+          child.classList.add('wrong', 'shake-wrong');
+        }
+      });
+    }
+
     // Cortinilla de cine: barrido oscuro que cubre la pantalla, cambia el
     // contenido a mitad de camino y se retira.
     function wipeTransition(swapFn) {
@@ -220,15 +250,7 @@
       questionCounter.textContent = `Pregunta ${index + 1}/${round.length}`;
       scoreLabel.textContent = `Puntos: ${score}`;
       questionText.textContent = current.question;
-      answersGrid.innerHTML = '';
-      current.options.forEach(option => {
-        const button = document.createElement('button');
-        button.type = 'button';
-        button.className = 'answer-btn';
-        button.textContent = option;
-        button.addEventListener('click', () => handleAnswer(option, button));
-        answersGrid.appendChild(button);
-      });
+      renderOptions(current.options, handleAnswer);
       startTimer();
     }
 
@@ -270,15 +292,7 @@
 
       if (isCorrect) Audio.playCorrect(); else Audio.playWrong();
 
-      [...answersGrid.children].forEach(child => {
-        child.disabled = true;
-        if (child.textContent === current.correctAnswer) {
-          child.classList.add('correct');
-          if (isCorrect && child === button) child.classList.add('flash-gold');
-        } else if (child === button) {
-          child.classList.add('wrong', 'shake-wrong');
-        }
-      });
+      revealAnswer({ correctAnswer: current.correctAnswer, selectedButton: button, isCorrect });
       scoreLabel.textContent = `Puntos: ${score}`;
       setTimeout(() => wipeTransition(nextQuestion), 1200);
     }
@@ -368,15 +382,7 @@
     }
 
     function renderMarathonOptions(options) {
-      answersGrid.innerHTML = '';
-      options.forEach(option => {
-        const button = document.createElement('button');
-        button.type = 'button';
-        button.className = 'answer-btn';
-        button.textContent = option;
-        button.addEventListener('click', () => handleMarathonAnswer(option, button));
-        answersGrid.appendChild(button);
-      });
+      renderOptions(options, handleMarathonAnswer);
     }
 
     function startMarathon() {
@@ -441,15 +447,7 @@
       questionsAnswered += 1;
       questionCounter.textContent = `Respondidas: ${questionsAnswered}`;
 
-      [...answersGrid.children].forEach(child => {
-        child.disabled = true;
-        if (child.textContent === marathonQuestion.correctAnswer) {
-          child.classList.add('correct');
-          if (isCorrect && (assisted || child === button)) child.classList.add('flash-gold');
-        } else if (!assisted && child === button) {
-          child.classList.add('wrong', 'shake-wrong');
-        }
-      });
+      revealAnswer({ correctAnswer: marathonQuestion.correctAnswer, selectedButton: button, isCorrect, assisted });
 
       if (isCorrect) {
         marathonScore += computeMarathonScore(remaining, streakBeforeAnswer, { assisted });
