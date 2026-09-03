@@ -103,6 +103,13 @@ Cada categoría en `shared/questions.js` es un objeto con `label`, `description`
 
 **Responsive mobile-first.** El layout usa flexbox/grid con unidades relativas y `clamp()`, botones con una altura mínima de 44px para uso táctil, y media queries que colapsan la grilla de categorías y de respuestas a una sola columna en pantallas pequeñas, sin scroll horizontal.
 
+## Capturas
+
+| | |
+|---|---|
+| ![Vestíbulo](screenshots/vestibulo.png) Vestíbulo: categorías, Modo Maratón y tiendas | ![Modo Maratón](screenshots/maraton.png) Modo Maratón: racha, multiplicador y comodines |
+| ![Resumen de Maratón](screenshots/resumen.png) Resumen al terminar la racha | ![Mi perfil](screenshots/perfil.png) Mi perfil: estadísticas del jugador |
+
 ## GitHub Pages
 
 El workflow `.github/workflows/deploy.yaml` publica los archivos estáticos en cada push a `main`, sin compilación. Después de crear el repositorio, activa Pages una sola vez en **Settings → Pages → Source: GitHub Actions**. Ese toggle no se puede configurar mediante Git.
@@ -111,7 +118,7 @@ El sitio está disponible en `https://lucasmarjua-ui.github.io/mastercinema/`.
 
 ## Roadmap
 
-Ideas futuras: ampliar el banco de preguntas por categoría, más categorías (bandas sonoras, carteles por siluetas), notificaciones de logro recién desbloqueado durante la partida, perfil de jugador con historial de partidas.
+Ideas futuras: ampliar el banco de preguntas por categoría, más categorías (bandas sonoras, carteles por siluetas), notificaciones de logro recién desbloqueado durante la partida, pregunta diaria con recompensa especial, historial de partidas anteriores en Mi perfil.
 
 ## Licencia
 
