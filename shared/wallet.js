@@ -9,7 +9,10 @@ export const Wallet = {
     const safeAmount = Math.floor(Number(amount) || 0);
     const total = Math.max(0, this.get() + safeAmount);
     localStorage.setItem(WALLET_KEY, String(total));
-    window.dispatchEvent(new CustomEvent('walletchange', { detail: total }));
+    // Ningún listener existente lee `detail` (todos releen Wallet.get()), así que
+    // cambiar la forma del evento es seguro. `delta` permite mostrar un "+X"
+    // flotante solo en las ganancias (delta > 0), no al gastar en la tienda.
+    window.dispatchEvent(new CustomEvent('walletchange', { detail: { total, delta: safeAmount } }));
     return total;
   },
   spend(amount) {

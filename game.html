@@ -25,9 +25,9 @@
         <span class="pill" id="score-label">Puntos: 0</span>
       </div>
       <div class="wildcard-bar" id="wildcard-bar" hidden>
-        <button class="wildcard-btn" id="wc-fifty" type="button">50:50 <span class="count" id="wc-fifty-count">1</span></button>
-        <button class="wildcard-btn" id="wc-skip" type="button">Pasar <span class="count" id="wc-skip-count">1</span></button>
-        <button class="wildcard-btn" id="wc-reveal" type="button">Chivato <span class="count" id="wc-reveal-count">1</span></button>
+        <button class="wildcard-btn" id="wc-fifty" type="button"><span class="wc-icon icon-scissors" aria-hidden="true"><span class="blade a"></span><span class="blade b"></span><span class="ring a"></span><span class="ring b"></span></span> 50:50 <span class="count" id="wc-fifty-count">1</span></button>
+        <button class="wildcard-btn" id="wc-skip" type="button"><span class="wc-icon icon-arrow" aria-hidden="true"></span> Pasar <span class="count" id="wc-skip-count">1</span></button>
+        <button class="wildcard-btn" id="wc-reveal" type="button"><span class="wc-icon icon-bulb" aria-hidden="true"></span> Chivato <span class="count" id="wc-reveal-count">1</span></button>
       </div>
       <div class="timer-track"><div class="timer-fill" id="timer-fill"></div></div>
       <div class="question-card">
@@ -56,10 +56,10 @@
       <h2>Resumen de Maratón</h2>
       <p id="marathon-record-banner" class="new-record-banner" hidden>¡Nuevo récord de racha!</p>
       <div class="results-stats">
-        <div class="stat-block"><strong id="marathon-final-streak">0</strong><span>Racha final</span></div>
-        <div class="stat-block"><strong id="marathon-final-score">0</strong><span>Puntuación</span></div>
-        <div class="stat-block"><strong id="marathon-wildcards-used">0</strong><span>Comodines usados</span></div>
-        <div class="stat-block"><strong id="marathon-reels">0</strong><span>Bobinas ganadas</span></div>
+        <div class="stat-block"><span class="stat-icon"><span class="icon-stat-flame"></span></span><strong id="marathon-final-streak">0</strong><span>Racha final</span></div>
+        <div class="stat-block"><span class="stat-icon"><span class="icon-star"></span></span><strong id="marathon-final-score">0</strong><span>Puntuación</span></div>
+        <div class="stat-block"><span class="stat-icon icon-stat-wildcard"></span><strong id="marathon-wildcards-used">0</strong><span>Comodines usados</span></div>
+        <div class="stat-block"><span class="stat-icon"><span class="reel-coin"></span></span><strong id="marathon-reels">0</strong><span>Bobinas ganadas</span></div>
       </div>
       <p id="marathon-leaderboard-note" class="modal-error" style="color:var(--gold-bright)"></p>
       <div class="results-actions">
@@ -138,9 +138,36 @@
 
     categoryLabel.textContent = category.label;
 
+    const walletPill = document.querySelector('.wallet-pill');
     const renderWallet = () => { walletCount.textContent = Wallet.get(); };
     renderWallet();
-    window.addEventListener('walletchange', renderWallet);
+    function showCoinGain(delta) {
+      if (!delta || delta <= 0) return;
+      const badge = document.createElement('span');
+      badge.className = 'coin-gain';
+      badge.textContent = `+${delta}`;
+      walletPill.appendChild(badge);
+      badge.addEventListener('animationend', () => badge.remove(), { once: true });
+    }
+    window.addEventListener('walletchange', event => {
+      const delta = event.detail && event.detail.delta;
+      if (delta > 0) { showCoinGain(delta); setTimeout(renderWallet, 500); }
+      else renderWallet();
+    });
+
+    // Anima un número contando hacia arriba desde su valor actual hasta `to`.
+    function animateCount(element, to, duration = 800) {
+      const from = 0;
+      const start = performance.now();
+      function step(now) {
+        const progress = Math.min(1, (now - start) / duration);
+        const eased = 1 - (1 - progress) * (1 - progress);
+        element.textContent = Math.round(from + (to - from) * eased);
+        if (progress < 1) requestAnimationFrame(step);
+        else element.textContent = to;
+      }
+      requestAnimationFrame(step);
+    }
 
     const soundButton = document.querySelector('#sound-toggle');
     const renderSound = () => { soundButton.textContent = `Sonido: ${Audio.isMuted() ? 'OFF' : 'ON'}`; };
@@ -323,8 +350,10 @@
     function updateStreakBadge() {
       streakCountEl.textContent = streak;
       streakMultiplierEl.textContent = marathonMultiplier(streak);
-      const tier = streak >= 20 ? 3 : streak >= 10 ? 2 : streak >= 5 ? 1 : 0;
-      streakBadge.classList.remove('tier-1', 'tier-2', 'tier-3');
+      // Solo 2 tramos visuales (más el estado apagado por defecto):
+      // tier-1 = x1.5/x2 (racha 5-19, naranja), tier-2 = x3 (racha 20+, roja e intensa).
+      const tier = streak >= 20 ? 2 : streak >= 5 ? 1 : 0;
+      streakBadge.classList.remove('tier-1', 'tier-2');
       if (tier > 0) streakBadge.classList.add(`tier-${tier}`);
       scoreLabel.textContent = `Puntos: ${marathonScore}`;
     }
@@ -480,14 +509,15 @@
       recordMarathonRun(stats, { finalStreak: streak, noHelpStreak: cleanStreakMax, usedAllThree: wildcardsUsedThisGame.size >= 3 });
       saveStats(stats);
 
-      marathonFinalStreak.textContent = streak;
-      marathonFinalScore.textContent = marathonScore;
-      marathonWildcardsUsed.textContent = wildcardsUsedThisGame.size;
+      animateCount(marathonFinalStreak, streak);
+      animateCount(marathonFinalScore, marathonScore);
+      animateCount(marathonWildcardsUsed, wildcardsUsedThisGame.size);
       marathonRecordBanner.hidden = !isNewRecord;
+      marathonSummary.classList.toggle('record-mode', isNewRecord);
 
       const reward = reelsForScore(marathonScore);
       Wallet.add(reward);
-      marathonReels.textContent = reward;
+      animateCount(marathonReels, reward);
 
       const user = getCurrentUser();
       if (user) {

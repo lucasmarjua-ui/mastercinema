@@ -16,6 +16,7 @@
         <button id="sound-toggle" class="icon-btn" type="button">Sonido: ON</button>
         <span id="player-name" class="player-name" hidden></span>
         <button id="ranking-open" class="icon-btn" type="button">Ranking</button>
+        <button id="profile-open" class="icon-btn" type="button" hidden>Mi perfil</button>
         <button id="login-open" class="icon-btn" type="button">Iniciar sesión</button>
         <button id="logout" class="icon-btn" type="button" hidden>Cerrar sesión</button>
       </div>
@@ -88,6 +89,25 @@
     </form>
   </div>
 
+  <div class="modal-backdrop" id="profile-modal" hidden>
+    <section class="modal-card">
+      <button class="modal-close" id="profile-close" type="button">X</button>
+      <h2>Mi perfil</h2>
+      <dl class="profile-stats">
+        <dt>Mejor racha (Maratón)</dt><dd id="profile-best-streak">0</dd>
+        <dt>Partidas jugadas</dt><dd id="profile-games-played">0</dd>
+        <dt>% de aciertos</dt><dd id="profile-accuracy">0%</dd>
+        <dt>Categoría favorita</dt><dd id="profile-favorite">—</dd>
+      </dl>
+      <div class="profile-modal-section">
+        <h3>Temas comprados</h3>
+        <p id="profile-themes">—</p>
+        <h3>Comodines</h3>
+        <p id="profile-wildcards">—</p>
+      </div>
+    </section>
+  </div>
+
   <div class="modal-backdrop" id="ranking-modal" hidden>
     <section class="modal-card">
       <button class="modal-close" id="ranking-close" type="button">X</button>
@@ -109,6 +129,7 @@
     import { Audio } from './shared/audio.js';
     import { loginUser, registerUser, logoutUser, onUserChange, getCurrentUser } from './shared/auth.js';
     import { getTopScores, MARATHON_STREAK_CATEGORY } from './shared/leaderboard.js';
+    import { loadStats, getProfileSummary } from './shared/achievements.js';
 
     applyTheme();
 
@@ -119,9 +140,22 @@
     });
 
     const walletCount = document.querySelector('#wallet-count');
+    const walletPill = document.querySelector('.wallet-pill');
     const renderWallet = () => { walletCount.textContent = Wallet.get(); };
     renderWallet();
-    window.addEventListener('walletchange', renderWallet);
+    function showCoinGain(delta) {
+      if (!delta || delta <= 0) return;
+      const badge = document.createElement('span');
+      badge.className = 'coin-gain';
+      badge.textContent = `+${delta}`;
+      walletPill.appendChild(badge);
+      badge.addEventListener('animationend', () => badge.remove(), { once: true });
+    }
+    window.addEventListener('walletchange', event => {
+      const delta = event.detail && event.detail.delta;
+      if (delta > 0) { showCoinGain(delta); setTimeout(renderWallet, 500); }
+      else renderWallet();
+    });
 
     const themeGrid = document.querySelector('#theme-grid');
     const renderThemes = () => {
@@ -215,7 +249,24 @@
       nameLabel.hidden = !loggedIn;
       document.querySelector('#login-open').hidden = loggedIn;
       document.querySelector('#logout').hidden = !loggedIn;
+      document.querySelector('#profile-open').hidden = !loggedIn;
     });
+
+    const profileModal = document.querySelector('#profile-modal');
+    function renderProfile() {
+      const stats = loadStats();
+      const summary = getProfileSummary(stats);
+      document.querySelector('#profile-best-streak').textContent = summary.bestMarathonStreak;
+      document.querySelector('#profile-games-played').textContent = summary.gamesPlayed;
+      document.querySelector('#profile-accuracy').textContent = `${summary.accuracyPct}%`;
+      document.querySelector('#profile-favorite').textContent = summary.favoriteCategory ? QUESTIONS[summary.favoriteCategory].label : 'Aún sin partidas';
+      const themeState = getThemeState();
+      document.querySelector('#profile-themes').textContent = THEMES.filter(theme => themeState.owned.includes(theme.id)).map(theme => theme.name).join(', ') || '—';
+      const upgrades = getWildcardUpgrades();
+      document.querySelector('#profile-wildcards').textContent = WILDCARDS.map(wildcard => `${wildcard.name}: ${1 + (upgrades[wildcard.id] || 0)} uso(s)/partida`).join(' · ');
+    }
+    document.querySelector('#profile-open').addEventListener('click', () => { renderProfile(); profileModal.hidden = false; });
+    document.querySelector('#profile-close').addEventListener('click', () => { profileModal.hidden = true; });
 
     const rankingModal = document.querySelector('#ranking-modal');
     const rankingCategory = document.querySelector('#ranking-category');

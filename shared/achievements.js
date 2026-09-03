@@ -24,7 +24,7 @@ export const ACHIEVEMENTS = [
 ];
 
 function defaultCategoryStats() {
-  return { timesPlayed: 0, bestCorrect: 0, perfectRounds: 0, totalScore: 0, bestStreak: 0, streakRun: 0, fastestAnswerMs: null, perfectAvgRatioMax: 0 };
+  return { timesPlayed: 0, bestCorrect: 0, perfectRounds: 0, totalScore: 0, bestStreak: 0, streakRun: 0, fastestAnswerMs: null, perfectAvgRatioMax: 0, totalCorrect: 0, totalAnswered: 0 };
 }
 
 function defaultMarathonStats() {
@@ -80,6 +80,8 @@ export function recordRoundEnd(stats, { category, correctCount, totalCount, scor
   cat.timesPlayed += 1;
   cat.bestCorrect = Math.max(cat.bestCorrect, correctCount);
   cat.totalScore += Math.max(0, Math.floor(Number(score) || 0));
+  cat.totalCorrect += correctCount;
+  cat.totalAnswered += totalCount;
   if (correctCount === totalCount) {
     cat.perfectRounds += 1;
     if (category === 'quotes') cat.perfectAvgRatioMax = Math.max(cat.perfectAvgRatioMax, avgRemainingRatio);
@@ -95,6 +97,21 @@ export function recordMarathonRun(stats, { finalStreak, noHelpStreak, usedAllThr
   marathon.noHelpBestStreak = Math.max(marathon.noHelpBestStreak, noHelpStreak);
   if (usedAllThree) marathon.usedAllThreeInOneRun = true;
   return stats;
+}
+
+// Resumen derivado para la pantalla "Mi perfil": partidas jugadas (categorías +
+// Maratón), % de aciertos global (sobre las 4 categorías clásicas) y categoría
+// favorita (la más jugada).
+export function getProfileSummary(stats) {
+  const gamesPlayed = CATEGORIES.reduce((sum, category) => sum + stats[category].timesPlayed, 0) + stats.marathon.gamesPlayed;
+  const totalCorrect = CATEGORIES.reduce((sum, category) => sum + stats[category].totalCorrect, 0);
+  const totalAnswered = CATEGORIES.reduce((sum, category) => sum + stats[category].totalAnswered, 0);
+  const accuracyPct = totalAnswered > 0 ? Math.round((totalCorrect / totalAnswered) * 100) : 0;
+  let favoriteCategory = null;
+  CATEGORIES.forEach(category => {
+    if (stats[category].timesPlayed > 0 && (!favoriteCategory || stats[category].timesPlayed > stats[favoriteCategory].timesPlayed)) favoriteCategory = category;
+  });
+  return { gamesPlayed, accuracyPct, favoriteCategory, bestMarathonStreak: stats.marathon.bestStreak };
 }
 
 export function getAchievementState(stats) {

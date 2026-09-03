@@ -36,7 +36,9 @@ function mergeCategoryStats(local = {}, cloud = {}) {
     bestStreak: Math.max(local.bestStreak || 0, cloud.bestStreak || 0),
     streakRun: 0,
     fastestAnswerMs: local.fastestAnswerMs == null ? cloud.fastestAnswerMs ?? null : cloud.fastestAnswerMs == null ? local.fastestAnswerMs : Math.min(local.fastestAnswerMs, cloud.fastestAnswerMs),
-    perfectAvgRatioMax: Math.max(local.perfectAvgRatioMax || 0, cloud.perfectAvgRatioMax || 0)
+    perfectAvgRatioMax: Math.max(local.perfectAvgRatioMax || 0, cloud.perfectAvgRatioMax || 0),
+    totalCorrect: Math.max(local.totalCorrect || 0, cloud.totalCorrect || 0),
+    totalAnswered: Math.max(local.totalAnswered || 0, cloud.totalAnswered || 0)
   };
 }
 function mergeMarathonStats(local = {}, cloud = {}) {
