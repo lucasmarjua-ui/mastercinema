@@ -10,3 +10,8 @@ Thumbs.db
 
 # Local tooling
 *.log
+
+# Hero (React + TS + Tailwind + Vite): dist/ se recompila en cada deploy
+# (ver .github/workflows/deploy.yaml), no se versiona.
+node_modules/
+dist/

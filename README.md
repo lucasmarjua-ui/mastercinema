@@ -3,21 +3,28 @@
 [![Deploy to GitHub Pages](https://github.com/lucasmarjua-ui/mastercinema/actions/workflows/deploy.yaml/badge.svg)](https://github.com/lucasmarjua-ui/mastercinema/actions/workflows/deploy.yaml)
 [![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 [![Demo en vivo](https://img.shields.io/badge/demo-en%20vivo-brightgreen)](https://lucasmarjua-ui.github.io/mastercinema/)
-![Sin dependencias](https://img.shields.io/badge/dependencias-cero-orange)
+![Vanilla + hero en React](https://img.shields.io/badge/juego-vanilla%20JS-orange) ![Hero](https://img.shields.io/badge/hero-React%20%2B%20TS%20%2B%20Tailwind-blue)
 
-MasterCinema es un juego de trivia de cine, estático y responsive, con una identidad visual de sala de cine y alfombra roja: rojo carmesí, dorado, negro y tipografía tipo cartel. Hecho con HTML, CSS y JavaScript vanilla, sin frameworks ni build step.
+MasterCinema es un juego de trivia de cine, estático y responsive, con una identidad visual de sala de cine y alfombra roja: rojo carmesí, dorado, negro y tipografía tipo cartel. El sitio en sí (categorías, partidas, tiendas, cuentas, ranking) es HTML, CSS y JavaScript vanilla, sin frameworks ni build step. La única excepción es el hero de portada de `index.html`, en React + TypeScript + Tailwind, que se compila aparte a un bundle estático (ver [Hero de portada](#hero-de-portada)).
 
 **[▶ Jugar ahora](https://lucasmarjua-ui.github.io/mastercinema/)**
 
 ## Jugar localmente
 
-No hay dependencias ni build step. Al usar módulos ES nativos, hace falta servir los archivos (abrir `index.html` con doble clic no funciona por las políticas de CORS de `file://`). Sirve la raíz con cualquier servidor estático, por ejemplo:
+El sitio en sí no tiene dependencias ni build step, pero `index.html` carga el hero de portada ya compilado desde `dist/`, así que hace falta generarlo una vez:
+
+```bash
+npm install
+npm run build   # deja dist/mastercinema-hero.js y dist/mastercinema-hero.css listos
+```
+
+Al usar módulos ES nativos, además hace falta servir los archivos (abrir `index.html` con doble clic no funciona por las políticas de CORS de `file://`). Sirve la raíz con cualquier servidor estático, por ejemplo:
 
 ```bash
 python -m http.server 8000
 ```
 
-Luego visita `http://localhost:8000`.
+Luego visita `http://localhost:8000`. Para iterar solo sobre el hero con recarga en caliente, sin el resto del sitio, usa `npm run dev` (sirve `src/hero/dev/` de forma aislada).
 
 ## Cómo se juega
 
@@ -46,7 +53,9 @@ shared/auth.js             Registro, login con usuario/contraseña, invitado y s
 shared/leaderboard.js      Envío y lectura del ranking global en Firestore (por categoría y de mejor racha)
 shared/wildcards.js        Catálogo de comodines de Maratón, usos base y compra de usos extra
 firestore.rules            Reglas de seguridad del proyecto Firebase (referencia, se pegan en la consola)
-.github/workflows/deploy.yaml   Publicación en GitHub Pages en cada push a main
+src/hero/                  Hero de portada: React + TypeScript + Tailwind (ver más abajo)
+dist/                      Bundle compilado del hero, generado por `npm run build` (no versionado)
+.github/workflows/deploy.yaml   Compila el hero e instala en GitHub Pages en cada push a main
 ```
 
 ## Sonido y sensación de juego
@@ -95,9 +104,27 @@ Después de estos pasos, cuentas, sincronización y ranking funcionan sin tocar 
 
 Cada categoría en `shared/questions.js` es un objeto con `label`, `description` e `items`. Cada `item` tiene `q` (el enunciado), `correct` (la respuesta correcta) y `wrong` (un array con las 3 opciones falsas). No hace falta tocar `game.html` ni `quiz-engine.js`: el motor arma la ronda, baraja el orden de las opciones y recicla el banco si tiene menos de 10 preguntas por categoría.
 
+## Hero de portada
+
+El bloque de bienvenida a pantalla completa de `index.html` (antes de la selección de categorías) es un componente aislado en **React + TypeScript + Tailwind CSS + Vite**, con iconos de `lucide-react` — la única parte del proyecto con build step. Se compila por separado a un bundle propio (`npm run build` → `dist/mastercinema-hero.js` + `dist/mastercinema-hero.css`) que `index.html` carga con un `<script type="module">`/`<link>` normales, igual que cualquier otro asset estático: Vite no procesa ni toca el resto de la página (categorías, tiendas, modales, el script de juego), que sigue siendo exactamente el mismo HTML/CSS/JS vanilla de siempre, sirviéndose de la cabecera funcional real (bobinas, sonido, login, ranking, perfil) que queda justo debajo del hero.
+
+Piezas propias, en `src/hero/`:
+
+- `BoomerangVideoBg.tsx` — reproduce un vídeo una vez, capturando cada fotograma (máx. 960px de ancho) con `requestVideoFrameCallback` (con reserva a `requestAnimationFrame`) en bitmaps fuera de pantalla; al terminar, oculta el `<video>` y reproduce los fotogramas capturados en bucle ping-pong a 30fps para siempre.
+- `Hero.tsx` — cabecera propia (logo, nav, watchlist decorativa, menú móvil), titular con entrada escalonada (`animate-fade-up` + `delay-N`, con `fill-mode: backwards` porque `both`/`forwards` deja un `transform` residual que rompe el `backdrop-filter` de los `.liquid-glass` hijos) y el widget "En cartelera".
+- `movies.ts` — los 4 títulos+año que muestra el widget son datos reales, extraídos de `shared/questions.js` (categoría Años de Estreno): *Titanic* (1997), *Toy Story* (1995), *El Rey León* (1994), *La Lista de Schindler* (1994). MasterCinema todavía no tiene un catálogo de fichas de película navegable, así que se reutilizó el único dato real disponible en vez de inventar títulos de muestra.
+
+**Vídeo y fuente, con licencia verificada.** El vídeo es *["A red curtain with a black background"](https://www.pexels.com/video/a-red-curtain-with-a-black-background-4722613/)* (cottonbro studio, Pexels License: uso comercial libre, sin atribución obligatoria; CORS abierto en el CDN, necesario para poder capturar los fotogramas en canvas). Se descartó Mixkit: la mayoría de sus clips de cine/proyector que se revisaron estaban bajo "Mixkit Restricted License" (solo uso personal; el comercial exige una suscripción a Envato Elements). La tipografía es Inter (Google Fonts) en vez de la Helvetica redistribuida sin licencia clara de la referencia original.
+
+**Color de marca, no el azul de la referencia.** El hero reutiliza la paleta ya establecida en `shared/theme.css`: carmesí (`brand`/`brand-bright`, `#8f1329`/`#c62841`) en superficies sólidas (logo, CTA principal, icono del widget) y dorado (`gold`/`gold-bright`) en los acentos de `.liquid-glass`, igual que el resto del sitio.
+
+**Preflight de Tailwind desactivado.** El reset global de Tailwind (`corePlugins.preflight`) pisaría selectores globales que ya existen en `shared/theme.css` (`h1, h2, h3`, `button`, etc.) para el resto de la página; se desactivó, y los resets que hacían falta dentro del hero (botones sin borde/fondo por defecto) se añadieron con alcance explícito a `#hero-root` en `src/hero/index.css`.
+
+**Nav decorativo, mapeado a lo que ya existe.** Los enlaces del hero (Catálogo, Directores, Reseñas, Sala de proyección) hacen scroll suave a partes reales de la página: Catálogo y Directores a la rejilla de categorías (Directores a su tarjeta concreta), Sala de proyección a la tarjeta de Modo Maratón. Reseñas no tiene todavía una sección equivalente en el sitio, así que baja al pie de página. El botón "Watchlist" y el corazón del widget "En cartelera" son puramente decorativos (estado local de React, sin persistencia) — MasterCinema no tiene todavía una watchlist real.
+
 ## Decisiones técnicas
 
-**Sin build step ni frameworks.** Todo el proyecto es HTML, CSS y JavaScript vanilla con módulos ES nativos del navegador. Esto permite que GitHub Pages sirva el repositorio tal cual, sin paso de compilación ni CI de build, y que cualquiera pueda clonar el repositorio y abrir el proyecto sin instalar nada.
+**Sin build step ni frameworks, salvo el hero de portada.** El resto del proyecto es HTML, CSS y JavaScript vanilla con módulos ES nativos del navegador, sin paso de compilación. Esto permite que GitHub Pages sirva el repositorio prácticamente tal cual, y que cualquiera pueda clonar el repositorio y abrir el proyecto sin instalar nada más que lo necesario para el hero (`npm install && npm run build`, una sola vez).
 
 **Sin imágenes ni fuentes de terceros con derechos.** No hay carteles ni fotos de películas o actores: toda la identidad visual (claqueta, estrella, comillas, rollo de película) se dibuja con CSS puro (gradientes, `clip-path`, pseudo-elementos), evitando dependencias de assets binarios y problemas de derechos de autor.
 
@@ -112,7 +139,7 @@ Cada categoría en `shared/questions.js` es un objeto con `label`, `description`
 
 ## GitHub Pages
 
-El workflow `.github/workflows/deploy.yaml` publica los archivos estáticos en cada push a `main`, sin compilación. Después de crear el repositorio, activa Pages una sola vez en **Settings → Pages → Source: GitHub Actions**. Ese toggle no se puede configurar mediante Git.
+El workflow `.github/workflows/deploy.yaml` instala dependencias, compila el hero (`npm ci && npm run build`) y publica el repositorio completo (incluido el `dist/` recién generado) en cada push a `main`. Después de crear el repositorio, activa Pages una sola vez en **Settings → Pages → Source: GitHub Actions**. Ese toggle no se puede configurar mediante Git.
 
 El sitio está disponible en `https://lucasmarjua-ui.github.io/mastercinema/`.
 

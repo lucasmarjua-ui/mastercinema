@@ -23,6 +23,17 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+      - name: Install hero dependencies
+        run: npm ci
+      - name: Build hero (React + TS + Tailwind + Vite)
+        run: npm run build
+      - name: Remove node_modules before publishing
+        run: rm -rf node_modules
       - name: Setup Pages
         uses: actions/configure-pages@v5
       - name: Upload static files

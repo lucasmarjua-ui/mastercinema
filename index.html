@@ -11,8 +11,10 @@
   <meta name="twitter:card" content="summary_large_image">
   <title>MasterCinema / Trivia de Cine</title>
   <link rel="stylesheet" href="./shared/theme.css">
+  <link rel="stylesheet" href="./dist/mastercinema-hero.css">
 </head>
 <body>
+  <div id="hero-root"></div>
   <main class="cinema-shell">
     <header class="topbar">
       <a class="brand" href="./index.html">MASTER<span>CINEMA</span></a>
@@ -27,11 +29,6 @@
       </div>
     </header>
     <div class="reel-divider" aria-hidden="true"></div>
-    <section class="hero">
-      <span class="eyebrow">¿Cuánto sabes de cine?</span>
-      <h1>Pon a prueba tu cinefilia</h1>
-      <p>Elige una categoría y responde 10 preguntas contrarreloj. Cuanto más rápido aciertes, más puntos ganas.</p>
-    </section>
     <section>
       <div class="section-heading"><h2>Elige tu categoría</h2></div>
       <div class="category-grid" id="category-grid">
@@ -126,6 +123,7 @@
     </section>
   </div>
 
+  <script type="module" src="./dist/mastercinema-hero.js"></script>
   <script type="module">
     import { QUESTIONS } from './shared/questions.js';
     import { Wallet } from './shared/wallet.js';
