@@ -34,7 +34,7 @@
         <button class="wildcard-btn" id="wc-skip" type="button"><span class="wc-icon icon-arrow" aria-hidden="true"></span> Pasar <span class="count" id="wc-skip-count">1</span></button>
         <button class="wildcard-btn" id="wc-reveal" type="button"><span class="wc-icon icon-bulb" aria-hidden="true"></span> Chivato <span class="count" id="wc-reveal-count">1</span></button>
       </div>
-      <div class="timer-track"><div class="timer-fill" id="timer-fill"></div></div>
+      <div class="timer-ring" id="timer-ring" style="--pct:100"><span class="timer-ring-value" id="timer-value">15</span></div>
       <div class="question-card">
         <h2 id="question-text">Cargando pregunta...</h2>
       </div>
@@ -49,7 +49,7 @@
         <div class="stat-block"><strong id="result-score">0</strong><span>Puntuación</span></div>
         <div class="stat-block"><strong id="result-reels">0</strong><span>Bobinas ganadas</span></div>
       </div>
-      <p id="leaderboard-note" class="modal-error" style="color:var(--gold-bright)"></p>
+      <p id="leaderboard-note" class="modal-error" style="color:var(--amber-bright)"></p>
       <div class="results-actions">
         <button class="btn btn-gold" id="play-again" type="button">Jugar de nuevo</button>
         <a class="btn btn-ghost" href="./index.html">Cambiar categoría</a>
@@ -66,7 +66,7 @@
         <div class="stat-block"><span class="stat-icon icon-stat-wildcard"></span><strong id="marathon-wildcards-used">0</strong><span>Comodines usados</span></div>
         <div class="stat-block"><span class="stat-icon"><span class="reel-coin"></span></span><strong id="marathon-reels">0</strong><span>Bobinas ganadas</span></div>
       </div>
-      <p id="marathon-leaderboard-note" class="modal-error" style="color:var(--gold-bright)"></p>
+      <p id="marathon-leaderboard-note" class="modal-error" style="color:var(--amber-bright)"></p>
       <div class="results-actions">
         <button class="btn btn-gold" id="marathon-play-again" type="button">Jugar de nuevo</button>
         <a class="btn btn-ghost" href="./index.html">Cambiar categoría</a>
@@ -79,7 +79,7 @@
       <span>Responde antes de que se apague la luz</span>
     </footer>
   </main>
-  <div class="wipe-bar" id="wipe-bar" aria-hidden="true"></div>
+  <div class="iris-wipe" id="wipe-bar" aria-hidden="true"></div>
 
   <div class="modal-backdrop" id="achievement-modal" hidden>
     <section class="modal-card modal-wide">
@@ -111,7 +111,8 @@
     const categoryLabel = document.querySelector('#category-label');
     const questionCounter = document.querySelector('#question-counter');
     const scoreLabel = document.querySelector('#score-label');
-    const timerFill = document.querySelector('#timer-fill');
+    const timerRing = document.querySelector('#timer-ring');
+    const timerValue = document.querySelector('#timer-value');
     const questionText = document.querySelector('#question-text');
     const answersGrid = document.querySelector('#answers-grid');
     const quizPanel = document.querySelector('#quiz-panel');
@@ -263,13 +264,14 @@
       clearInterval(timerId);
       Audio.stopTick();
       deadline = Date.now() + TIME_LIMIT_MS;
-      timerFill.style.width = '100%';
-      timerFill.classList.remove('warning');
+      timerRing.style.setProperty('--pct', 100);
+      timerRing.classList.remove('warning');
       timerId = setInterval(() => {
         const remaining = deadline - Date.now();
         const pct = Math.max(0, remaining / TIME_LIMIT_MS) * 100;
-        timerFill.style.width = `${pct}%`;
-        if (pct < 30) timerFill.classList.add('warning');
+        timerRing.style.setProperty('--pct', pct);
+        timerValue.textContent = Math.max(0, Math.ceil(remaining / 1000));
+        if (pct < 30) timerRing.classList.add('warning');
         if (remaining <= 5000 && remaining > 0) Audio.startTick();
         if (remaining <= 0) {
           clearInterval(timerId);
@@ -353,7 +355,7 @@
     let questionsAnswered = 0;
 
     function spawnConfetti() {
-      const colors = ['#d4af37', '#f3d675', '#c62841', '#f6ead9'];
+      const colors = ['#ff7a1a', '#ffb35c', '#f2ede2', '#35c46a'];
       for (let i = 0; i < 28; i++) {
         const piece = document.createElement('div');
         piece.className = 'confetti-piece';
@@ -424,13 +426,14 @@
       clearInterval(marathonTimerId);
       Audio.stopTick();
       marathonDeadline = Date.now() + TIME_LIMIT_MS;
-      timerFill.style.width = '100%';
-      timerFill.classList.remove('warning');
+      timerRing.style.setProperty('--pct', 100);
+      timerRing.classList.remove('warning');
       marathonTimerId = setInterval(() => {
         const remaining = marathonDeadline - Date.now();
         const pct = Math.max(0, remaining / TIME_LIMIT_MS) * 100;
-        timerFill.style.width = `${pct}%`;
-        if (pct < 30) timerFill.classList.add('warning');
+        timerRing.style.setProperty('--pct', pct);
+        timerValue.textContent = Math.max(0, Math.ceil(remaining / 1000));
+        if (pct < 30) timerRing.classList.add('warning');
         if (remaining <= 5000 && remaining > 0) Audio.startTick();
         if (remaining <= 0) {
           clearInterval(marathonTimerId);
@@ -553,7 +556,7 @@
       const state = getAchievementState(stats);
       let lastCategory = null;
       achievementList.innerHTML = state.map(item => {
-        const heading = item.category !== lastCategory ? `<li style="margin-top:${lastCategory ? '10px' : '0'};font-size:12px;letter-spacing:.1em;color:var(--gold);text-transform:uppercase;">${CATEGORY_LABELS[item.category]}</li>` : '';
+        const heading = item.category !== lastCategory ? `<li style="margin-top:${lastCategory ? '10px' : '0'};font-size:12px;letter-spacing:.1em;color:var(--amber);text-transform:uppercase;">${CATEGORY_LABELS[item.category]}</li>` : '';
         lastCategory = item.category;
         return `${heading}<li class="ach-item ${item.unlocked ? '' : 'locked'}"><span class="ach-medal ${item.medal}">${item.medal[0].toUpperCase()}</span><span class="ach-body"><strong>${item.name}</strong><span>${item.description}</span></span></li>`;
       }).join('');

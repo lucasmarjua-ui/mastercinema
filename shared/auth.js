@@ -23,8 +23,8 @@ function writeLocal(data) { Object.entries(data || {}).forEach(([key, value]) =>
 
 function mergeThemes(local, cloud) {
   return {
-    owned: [...new Set(['hollywood', ...(cloud.owned || []), ...(local.owned || [])])],
-    equipped: local.equipped || cloud.equipped || 'hollywood'
+    owned: [...new Set(['leader', ...(cloud.owned || []), ...(local.owned || [])])],
+    equipped: local.equipped || cloud.equipped || 'leader'
   };
 }
 function mergeCategoryStats(local = {}, cloud = {}) {
@@ -54,7 +54,7 @@ function mergeStats(local, cloud) {
     crossStreak: { current: 0, best: Math.max(local.crossStreak?.best || 0, cloud.crossStreak?.best || 0) },
     marathon: mergeMarathonStats(local.marathon, cloud.marathon)
   };
-  ['directors', 'actors', 'quotes', 'years'].forEach(category => { merged[category] = mergeCategoryStats(local[category], cloud[category]); });
+  ['directors', 'actors', 'quotes', 'years', 'soundtracks'].forEach(category => { merged[category] = mergeCategoryStats(local[category], cloud[category]); });
   return merged;
 }
 function mergeWildcards(local = {}, cloud = {}) {

@@ -1,98 +1,143 @@
 // Banco de preguntas de MasterCinema, agrupado por categoría.
 // Cada pregunta tiene `correct` (respuesta correcta) y `wrong` (3 opciones falsas).
+// Todos los hechos (directores, intérpretes, citas, años, compositores) son
+// reales y verificables -- nada inventado.
 export const QUESTIONS = {
   directors: {
     label: 'Directores',
     description: '¿Quién está detrás de la cámara en los grandes clásicos?',
     items: [
-      {
-        q: '¿Quién dirigió "Pulp Fiction"?',
-        correct: 'Quentin Tarantino',
-        wrong: ['Martin Scorsese', 'David Fincher', 'Guy Ritchie']
-      },
-      {
-        q: '¿Quién dirigió "El Padrino"?',
-        correct: 'Francis Ford Coppola',
-        wrong: ['Sidney Lumet', 'Brian De Palma', 'Michael Cimino']
-      },
-      {
-        q: '¿Quién dirigió "Origen" (Inception)?',
-        correct: 'Christopher Nolan',
-        wrong: ['Denis Villeneuve', 'Ridley Scott', 'James Cameron']
-      },
-      {
-        q: '¿Quién dirigió "Tiburón" (Jaws)?',
-        correct: 'Steven Spielberg',
-        wrong: ['George Lucas', 'Ridley Scott', 'John Carpenter']
-      }
+      { q: '¿Quién dirigió "Pulp Fiction"?', correct: 'Quentin Tarantino', wrong: ['Martin Scorsese', 'David Fincher', 'Guy Ritchie'] },
+      { q: '¿Quién dirigió "El Padrino"?', correct: 'Francis Ford Coppola', wrong: ['Sidney Lumet', 'Brian De Palma', 'Michael Cimino'] },
+      { q: '¿Quién dirigió "Origen" (Inception)?', correct: 'Christopher Nolan', wrong: ['Denis Villeneuve', 'Ridley Scott', 'James Cameron'] },
+      { q: '¿Quién dirigió "Tiburón" (Jaws)?', correct: 'Steven Spielberg', wrong: ['George Lucas', 'Ridley Scott', 'John Carpenter'] },
+      { q: '¿Quién dirigió "Psicosis"?', correct: 'Alfred Hitchcock', wrong: ['Orson Welles', 'Billy Wilder', 'Stanley Kubrick'] },
+      { q: '¿Quién dirigió "Parásitos"?', correct: 'Bong Joon-ho', wrong: ['Park Chan-wook', 'Hirokazu Kore-eda', 'Wong Kar-wai'] },
+      { q: '¿Quién dirigió "La La Land"?', correct: 'Damien Chazelle', wrong: ['Barry Jenkins', 'Greta Gerwig', 'Edgar Wright'] },
+      { q: '¿Quién dirigió "Regreso al Futuro"?', correct: 'Robert Zemeckis', wrong: ['John Hughes', 'Ivan Reitman', 'Joe Dante'] },
+      { q: '¿Quién dirigió "Parque Jurásico"?', correct: 'Steven Spielberg', wrong: ['James Cameron', 'Ron Howard', 'Joe Johnston'] },
+      { q: '¿Quién dirigió "E.T., el extraterrestre"?', correct: 'Steven Spielberg', wrong: ['Richard Donner', 'Chris Columbus', 'Robert Zemeckis'] },
+      { q: '¿Quiénes dirigieron "Matrix"?', correct: 'Las hermanas Wachowski', wrong: ['James Cameron', 'Christopher Nolan', 'Paul Verhoeven'] },
+      { q: '¿Quién dirigió "Titanic"?', correct: 'James Cameron', wrong: ['Steven Spielberg', 'Ridley Scott', 'Michael Bay'] },
+      { q: '¿Quién dirigió "Avatar"?', correct: 'James Cameron', wrong: ['Peter Jackson', 'Denis Villeneuve', 'Christopher Nolan'] },
+      { q: '¿Quién dirigió "El Señor de los Anillos: La Comunidad del Anillo"?', correct: 'Peter Jackson', wrong: ['Guillermo del Toro', 'Ridley Scott', 'Terry Gilliam'] },
+      { q: '¿Quién dirigió "Gladiator"?', correct: 'Ridley Scott', wrong: ['Oliver Stone', 'Wolfgang Petersen', 'Anthony Minghella'] },
+      { q: '¿Quién dirigió "Blade Runner"?', correct: 'Ridley Scott', wrong: ['James Cameron', 'David Cronenberg', 'John Carpenter'] },
+      { q: '¿Quién dirigió "El Caballero Oscuro"?', correct: 'Christopher Nolan', wrong: ['Zack Snyder', 'Tim Burton', 'Sam Raimi'] },
+      { q: '¿Quién dirigió "Joker" (2019)?', correct: 'Todd Phillips', wrong: ['Matt Reeves', 'James Gunn', 'Ridley Scott'] },
+      { q: '¿Quién dirigió "Whiplash"?', correct: 'Damien Chazelle', wrong: ['Darren Aronofsky', 'Alejandro G. Iñárritu', 'Denis Villeneuve'] },
+      { q: '¿Quién dirigió "Reservoir Dogs"?', correct: 'Quentin Tarantino', wrong: ['Guy Ritchie', 'David Fincher', 'Robert Rodriguez'] },
+      { q: '¿Quién dirigió "Cadena Perpetua"?', correct: 'Frank Darabont', wrong: ['Rob Reiner', 'Ron Howard', 'Curtis Hanson'] },
+      { q: '¿Quién dirigió "Forrest Gump"?', correct: 'Robert Zemeckis', wrong: ['Ron Howard', 'Barry Levinson', 'Mike Nichols'] },
+      { q: '¿Quién dirigió "El Exorcista"?', correct: 'William Friedkin', wrong: ['Roman Polanski', 'John Carpenter', 'Wes Craven'] },
+      { q: '¿Quién dirigió "Taxi Driver"?', correct: 'Martin Scorsese', wrong: ['Francis Ford Coppola', 'Sidney Lumet', 'Michael Cimino'] },
+      { q: '¿Quién dirigió "Uno de los Nuestros" (Goodfellas)?', correct: 'Martin Scorsese', wrong: ['Brian De Palma', 'Francis Ford Coppola', 'Oliver Stone'] }
     ]
   },
   actors: {
     label: 'Actores y Personajes',
     description: 'Reconoce a las estrellas y a quiénes dieron vida a los íconos.',
     items: [
-      {
-        q: '¿Qué actor interpreta a Tony Stark / Iron Man en el UCM?',
-        correct: 'Robert Downey Jr.',
-        wrong: ['Chris Evans', 'Chris Hemsworth', 'Mark Ruffalo']
-      },
-      {
-        q: '¿Qué actriz interpreta a Hermione Granger?',
-        correct: 'Emma Watson',
-        wrong: ['Emma Stone', 'Emma Roberts', 'Evanna Lynch']
-      },
-      {
-        q: '¿Qué actor interpreta a Jack Sparrow?',
-        correct: 'Johnny Depp',
-        wrong: ['Orlando Bloom', 'Geoffrey Rush', 'Ewan McGregor']
-      }
+      { q: '¿Qué actor interpreta a Tony Stark / Iron Man en el UCM?', correct: 'Robert Downey Jr.', wrong: ['Chris Evans', 'Chris Hemsworth', 'Mark Ruffalo'] },
+      { q: '¿Qué actriz interpreta a Hermione Granger?', correct: 'Emma Watson', wrong: ['Emma Stone', 'Emma Roberts', 'Evanna Lynch'] },
+      { q: '¿Qué actor interpreta a Jack Sparrow?', correct: 'Johnny Depp', wrong: ['Orlando Bloom', 'Geoffrey Rush', 'Ewan McGregor'] },
+      { q: '¿Qué actor interpreta a Neo en "Matrix"?', correct: 'Keanu Reeves', wrong: ['Will Smith', 'Brad Pitt', 'Hugo Weaving'] },
+      { q: '¿Qué actor interpreta al Joker en "Joker" (2019)?', correct: 'Joaquin Phoenix', wrong: ['Jared Leto', 'Heath Ledger', 'Jack Nicholson'] },
+      { q: '¿Qué actriz interpreta a Katniss Everdeen en "Los Juegos del Hambre"?', correct: 'Jennifer Lawrence', wrong: ['Emma Watson', 'Shailene Woodley', 'Kristen Stewart'] },
+      { q: '¿Qué actor interpreta a Wolverine en la saga X-Men?', correct: 'Hugh Jackman', wrong: ['Ryan Reynolds', 'Liev Schreiber', 'Taron Egerton'] },
+      { q: '¿Qué actor interpreta a Forrest Gump?', correct: 'Tom Hanks', wrong: ['Tom Cruise', 'Kevin Costner', 'Bill Murray'] },
+      { q: '¿Qué actor interpreta a Jack Dawson en "Titanic"?', correct: 'Leonardo DiCaprio', wrong: ['Brad Pitt', 'Matt Damon', 'Ben Affleck'] },
+      { q: '¿Qué actriz interpreta a Rose en "Titanic"?', correct: 'Kate Winslet', wrong: ['Cameron Diaz', 'Gwyneth Paltrow', 'Nicole Kidman'] },
+      { q: '¿Qué actor interpreta a Batman en "El Caballero Oscuro"?', correct: 'Christian Bale', wrong: ['George Clooney', 'Val Kilmer', 'Michael Keaton'] },
+      { q: '¿Qué actor interpreta al Joker en "El Caballero Oscuro"?', correct: 'Heath Ledger', wrong: ['Jared Leto', 'Joaquin Phoenix', 'Cesar Romero'] },
+      { q: '¿Qué actor interpreta a Han Solo en la trilogía original de "Star Wars"?', correct: 'Harrison Ford', wrong: ['Mark Hamill', 'Alec Guinness', 'Billy Dee Williams'] },
+      { q: '¿Qué actor interpreta a Vito Corleone en "El Padrino"?', correct: 'Marlon Brando', wrong: ['Al Pacino', 'Robert De Niro', 'James Caan'] },
+      { q: '¿Qué actor interpreta a Michael Corleone en "El Padrino"?', correct: 'Al Pacino', wrong: ['Robert De Niro', 'Marlon Brando', 'John Cazale'] },
+      { q: '¿Qué actor interpreta a Maximus en "Gladiator"?', correct: 'Russell Crowe', wrong: ['Joaquin Phoenix', 'Eric Bana', 'Gerard Butler'] },
+      { q: '¿Qué actor interpreta a Tony Montana en "Scarface"?', correct: 'Al Pacino', wrong: ['Robert De Niro', 'Michael Corleone', 'Joe Pesci'] },
+      { q: '¿Qué actor interpreta a Aragorn en "El Señor de los Anillos"?', correct: 'Viggo Mortensen', wrong: ['Orlando Bloom', 'Sean Bean', 'Karl Urban'] },
+      { q: '¿Qué actor interpreta a Gandalf en "El Señor de los Anillos"?', correct: 'Ian McKellen', wrong: ['Christopher Lee', 'Anthony Hopkins', 'Ian Holm'] },
+      { q: '¿Qué actor interpreta a Jack Torrance en "El Resplandor"?', correct: 'Jack Nicholson', wrong: ['Robert De Niro', 'Dustin Hoffman', 'Gene Hackman'] },
+      { q: '¿Qué actor interpreta a James Bond en "Skyfall"?', correct: 'Daniel Craig', wrong: ['Pierce Brosnan', 'Timothy Dalton', 'Roger Moore'] },
+      { q: '¿Qué actor interpreta a Thor en el UCM?', correct: 'Chris Hemsworth', wrong: ['Chris Evans', 'Chris Pratt', 'Chris Pine'] },
+      { q: '¿Qué actor interpreta al Capitán América en el UCM?', correct: 'Chris Evans', wrong: ['Chris Hemsworth', 'Chris Pratt', 'Sebastian Stan'] },
+      { q: '¿Qué actriz interpreta a Lara Croft en "Tomb Raider" (2001)?', correct: 'Angelina Jolie', wrong: ['Alicia Vikander', 'Milla Jovovich', 'Charlize Theron'] }
     ]
   },
   quotes: {
     label: 'Frases Icónicas',
     description: 'Las líneas de diálogo que quedaron para la historia.',
     items: [
-      {
-        q: '"Que la fuerza te acompañe" es de...',
-        correct: 'Star Wars',
-        wrong: ['Star Trek', 'Dune', 'Guardianes de la Galaxia']
-      },
-      {
-        q: '"Hasta el infinito y más allá" es de...',
-        correct: 'Toy Story',
-        wrong: ['Los Increíbles', 'Wall-E', 'Up']
-      },
-      {
-        q: '"Sayonara, baby" es de...',
-        correct: 'Terminator 2',
-        wrong: ['Depredador', 'Rocky IV', 'Duro de Matar']
-      }
+      { q: '"Que la fuerza te acompañe" es de...', correct: 'Star Wars', wrong: ['Star Trek', 'Dune', 'Guardianes de la Galaxia'] },
+      { q: '"Hasta el infinito y más allá" es de...', correct: 'Toy Story', wrong: ['Los Increíbles', 'Wall-E', 'Up'] },
+      { q: '"Sayonara, baby" es de...', correct: 'Terminator 2', wrong: ['Depredador', 'Rocky IV', 'Duro de Matar'] },
+      { q: '"Le haré una oferta que no podrá rechazar" es de...', correct: 'El Padrino', wrong: ['Uno de los Nuestros', 'Scarface', 'Érase una vez en América'] },
+      { q: '"Houston, tenemos un problema" es de...', correct: 'Apolo 13', wrong: ['Gravity', 'Interstellar', 'El Marciano'] },
+      { q: '"Un gran poder conlleva una gran responsabilidad" es de...', correct: 'Spider-Man', wrong: ['Batman Begins', 'X-Men', 'Superman'] },
+      { q: '"No, yo soy tu padre" es de...', correct: 'Star Wars: El Imperio Contraataca', wrong: ['Star Wars: El Retorno del Jedi', 'Star Trek', 'Dune'] },
+      { q: '"Volveré" ("I\'ll be back") es de...', correct: 'Terminator', wrong: ['Terminator 2', 'Depredador', 'RoboCop'] },
+      { q: '"La vida es como una caja de bombones: nunca sabes lo que te va a tocar" es de...', correct: 'Forrest Gump', wrong: ['Cadena Perpetua', 'El Show de Truman', 'Big Fish'] },
+      { q: '"Aquí, mirándote, nena" ("Here\'s looking at you, kid") es de...', correct: 'Casablanca', wrong: ['Vacaciones en Roma', 'Con la Muerte en los Talones', 'Sabrina'] },
+      { q: '"Enséñame la pasta" ("Show me the money") es de...', correct: 'Jerry Maguire', wrong: ['Wall Street', 'El Lobo de Wall Street', 'Algo pasa con Mary'] },
+      { q: '"Voy a necesitar un barco más grande" es de...', correct: 'Tiburón', wrong: ['Titanic', 'Master and Commander', 'Náufrago'] },
+      { q: '"Hasta la vista, baby" es de...', correct: 'Terminator 2', wrong: ['Terminator', 'Total Recall', 'Depredador'] },
+      { q: '"Yippee-ki-yay, hijo de..." es de...', correct: 'Duro de Matar', wrong: ['Arma Letal', 'Speed', 'Con Air'] },
+      { q: '"Mi tesoro" ("My precious") es de...', correct: 'El Señor de los Anillos', wrong: ['El Hobbit', 'Harry Potter', 'Las Crónicas de Narnia'] },
+      { q: '"Después de todo, mañana será otro día" es de...', correct: 'Lo que el Viento se Llevó', wrong: ['Casablanca', 'Cantando bajo la Lluvia', 'Sonrisas y Lágrimas'] },
+      { q: '"El miedo lleva a la ira, la ira lleva al odio, el odio lleva al sufrimiento" es de...', correct: 'Star Wars: La Amenaza Fantasma', wrong: ['Star Wars: El Retorno del Jedi', 'El Señor de los Anillos', 'Dune'] }
     ]
   },
   years: {
     label: 'Años de Estreno',
     description: 'Ubica cada película en su año correcto.',
     items: [
-      {
-        q: '¿En qué año se estrenó "Titanic"?',
-        correct: '1997',
-        wrong: ['1995', '1998', '2000']
-      },
-      {
-        q: '¿En qué año se estrenó la primera "Toy Story"?',
-        correct: '1995',
-        wrong: ['1993', '1997', '1999']
-      },
-      {
-        q: '¿En qué año se estrenó "El Rey León" original?',
-        correct: '1994',
-        wrong: ['1992', '1996', '1989']
-      },
-      {
-        q: '¿En qué año ganó "La Lista de Schindler" el Oscar a mejor película?',
-        correct: '1994',
-        wrong: ['1991', '1996', '1998']
-      }
+      { q: '¿En qué año se estrenó "Titanic"?', correct: '1997', wrong: ['1995', '1998', '2000'] },
+      { q: '¿En qué año se estrenó la primera "Toy Story"?', correct: '1995', wrong: ['1993', '1997', '1999'] },
+      { q: '¿En qué año se estrenó "El Rey León" original?', correct: '1994', wrong: ['1992', '1996', '1989'] },
+      { q: '¿En qué año ganó "La Lista de Schindler" el Oscar a mejor película?', correct: '1994', wrong: ['1991', '1996', '1998'] },
+      { q: '¿En qué año se estrenó "El Padrino"?', correct: '1972', wrong: ['1969', '1974', '1977'] },
+      { q: '¿En qué año se estrenó "Star Wars: Una Nueva Esperanza"?', correct: '1977', wrong: ['1975', '1980', '1983'] },
+      { q: '¿En qué año se estrenó "Regreso al Futuro"?', correct: '1985', wrong: ['1982', '1988', '1990'] },
+      { q: '¿En qué año se estrenó "Parque Jurásico"?', correct: '1993', wrong: ['1991', '1995', '1997'] },
+      { q: '¿En qué año se estrenó "Pulp Fiction"?', correct: '1994', wrong: ['1992', '1996', '1999'] },
+      { q: '¿En qué año se estrenó "El Silencio de los Corderos"?', correct: '1991', wrong: ['1988', '1993', '1995'] },
+      { q: '¿En qué año se estrenó "Matrix"?', correct: '1999', wrong: ['1997', '2001', '2003'] },
+      { q: '¿En qué año se estrenó "Gladiator"?', correct: '2000', wrong: ['1998', '2002', '2004'] },
+      { q: '¿En qué año se estrenó "El Señor de los Anillos: La Comunidad del Anillo"?', correct: '2001', wrong: ['1999', '2002', '2003'] },
+      { q: '¿En qué año se estrenó "Origen" (Inception)?', correct: '2010', wrong: ['2008', '2012', '2014'] },
+      { q: '¿En qué año se estrenó "Avatar"?', correct: '2009', wrong: ['2007', '2011', '2013'] },
+      { q: '¿En qué año se estrenó "El Caballero Oscuro"?', correct: '2008', wrong: ['2005', '2010', '2012'] },
+      { q: '¿En qué año se estrenó "Parásitos"?', correct: '2019', wrong: ['2017', '2018', '2020'] },
+      { q: '¿En qué año se estrenó "Tiburón" (Jaws)?', correct: '1975', wrong: ['1973', '1977', '1979'] },
+      { q: '¿En qué año se estrenó "E.T., el extraterrestre"?', correct: '1982', wrong: ['1980', '1984', '1986'] },
+      { q: '¿En qué año se estrenó "Casablanca"?', correct: '1942', wrong: ['1939', '1945', '1950'] },
+      { q: '¿En qué año se estrenó "Psicosis"?', correct: '1960', wrong: ['1957', '1963', '1965'] },
+      { q: '¿En qué año se estrenó "Rocky"?', correct: '1976', wrong: ['1974', '1978', '1980'] },
+      { q: '¿En qué año se estrenó "Star Wars: El Imperio Contraataca"?', correct: '1980', wrong: ['1977', '1983', '1978'] }
+    ]
+  },
+  soundtracks: {
+    label: 'Bandas Sonoras',
+    description: '¿Quién puso la música a los grandes momentos del cine?',
+    items: [
+      { q: '¿Quién compuso la banda sonora de "Star Wars"?', correct: 'John Williams', wrong: ['Hans Zimmer', 'Danny Elfman', 'Alan Silvestri'] },
+      { q: '¿Quién compuso la banda sonora de "Tiburón"?', correct: 'John Williams', wrong: ['Ennio Morricone', 'Jerry Goldsmith', 'Alan Silvestri'] },
+      { q: '¿Quién compuso la banda sonora de "E.T., el extraterrestre"?', correct: 'John Williams', wrong: ['Alan Silvestri', 'James Horner', 'Hans Zimmer'] },
+      { q: '¿Quién compuso la banda sonora de "Indiana Jones: En Busca del Arca Perdida"?', correct: 'John Williams', wrong: ['Jerry Goldsmith', 'Basil Poledouris', 'Alan Silvestri'] },
+      { q: '¿Quién compuso la banda sonora de "Harry Potter y la Piedra Filosofal"?', correct: 'John Williams', wrong: ['Howard Shore', 'Hans Zimmer', 'Patrick Doyle'] },
+      { q: '¿Quién compuso la banda sonora de "Origen" (Inception)?', correct: 'Hans Zimmer', wrong: ['John Williams', 'Thomas Newman', 'Clint Mansell'] },
+      { q: '¿Quién compuso la banda sonora de "El Rey León" original?', correct: 'Hans Zimmer', wrong: ['Alan Menken', 'John Williams', 'Randy Newman'] },
+      { q: '¿Quién compuso la banda sonora de "Gladiator"?', correct: 'Hans Zimmer', wrong: ['James Horner', 'Howard Shore', 'John Williams'] },
+      { q: '¿Quién compuso la banda sonora de "El Caballero Oscuro"?', correct: 'Hans Zimmer', wrong: ['Danny Elfman', 'James Newton Howard', 'John Williams'] },
+      { q: '¿Quién compuso la banda sonora de "Batman" (1989)?', correct: 'Danny Elfman', wrong: ['Hans Zimmer', 'John Williams', 'James Horner'] },
+      { q: '¿Quién compuso la banda sonora de "Eduardo Manostijeras"?', correct: 'Danny Elfman', wrong: ['Alan Silvestri', 'Thomas Newman', 'Hans Zimmer'] },
+      { q: '¿Quién compuso la banda sonora de "Regreso al Futuro"?', correct: 'Alan Silvestri', wrong: ['John Williams', 'James Horner', 'Jerry Goldsmith'] },
+      { q: '¿Quién compuso la banda sonora de "Forrest Gump"?', correct: 'Alan Silvestri', wrong: ['Thomas Newman', 'Hans Zimmer', 'James Horner'] },
+      { q: '¿Quién compuso la banda sonora de "Vengadores: Infinity War"?', correct: 'Alan Silvestri', wrong: ['Hans Zimmer', 'Michael Giacchino', 'Brian Tyler'] },
+      { q: '¿Quién compuso la banda sonora de "El Bueno, el Feo y el Malo"?', correct: 'Ennio Morricone', wrong: ['Nino Rota', 'John Williams', 'Jerry Goldsmith'] },
+      { q: '¿Quién compuso la banda sonora de "Cinema Paradiso"?', correct: 'Ennio Morricone', wrong: ['Nino Rota', 'Nicola Piovani', 'Dario Marianelli'] },
+      { q: '¿Quién compuso la banda sonora de "El Señor de los Anillos"?', correct: 'Howard Shore', wrong: ['James Horner', 'Hans Zimmer', 'John Williams'] },
+      { q: '¿Quién compuso la banda sonora de "El Padrino"?', correct: 'Nino Rota', wrong: ['Ennio Morricone', 'Bernard Herrmann', 'Alex North'] }
     ]
   }
 };

@@ -5,19 +5,17 @@ export default {
     extend: {
       fontFamily: {
         sans: ['Inter', '-apple-system', '"Helvetica Neue"', 'Arial', 'sans-serif'],
+        display: ['Archivo', 'Inter', '-apple-system', 'sans-serif'],
       },
       colors: {
-        // Paleta ya establecida en shared/theme.css (sala de cine / alfombra
-        // roja) -- se reutiliza aquí en vez del blue-700 de la referencia.
-        brand: {
-          DEFAULT: '#8f1329',
-          bright: '#c62841',
-          deep: '#4a0912',
+        // Paleta "Leader" ya establecida en shared/theme.css: negro de sala,
+        // papel y ámbar de cuenta atrás. Mismos valores que --ink/--paper/--amber.
+        amber: {
+          DEFAULT: '#ff7a1a',
+          bright: '#ffb35c',
+          deep: '#a63e00',
         },
-        gold: {
-          DEFAULT: '#d4af37',
-          bright: '#f3d675',
-        },
+        paper: '#f2ede2',
       },
     },
   },

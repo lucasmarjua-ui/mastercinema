@@ -3,38 +3,38 @@
 import { Wallet } from './wallet.js';
 
 const KEY = 'mastercinema.themes';
-const DEFAULT_THEME = 'hollywood';
+const DEFAULT_THEME = 'leader';
 
 export const THEMES = [
   {
-    id: 'hollywood',
-    name: 'Hollywood Dorado',
-    description: 'Negro, dorado y rojo carmesí. La sala de siempre.',
+    id: 'leader',
+    name: 'Leader',
+    description: 'Negro de sala, papel y ámbar de cuenta atrás. La proyección de siempre.',
     cost: 0,
-    swatch: ['#0b0607', '#d4af37', '#8f1329']
+    swatch: ['#0a0a0b', '#ff7a1a', '#f2ede2']
   },
   {
-    id: 'drivein',
-    name: 'Autocine Neón',
-    description: 'Noche azul con rosa neón y cian, ambiente de autocine.',
+    id: 'bars',
+    name: 'Bandas SMPTE',
+    description: 'Magenta y cian de calibración de imagen, como el patrón de barras.',
     cost: 15,
-    swatch: ['#060814', '#38e8e0', '#ff2fb0']
+    swatch: ['#0a0a0c', '#ff2e7e', '#22e0d8']
   },
   {
-    id: 'silent',
-    name: 'Cine Mudo B/N',
-    description: 'Escala de grises, grano de película y parpadeo de proyector.',
+    id: 'noir',
+    name: 'Cinerama Noir',
+    description: 'Blanco y negro, grano de película y parpadeo de proyector.',
     cost: 20,
-    swatch: ['#050505', '#c9c9c9', '#4d4d4d'],
+    swatch: ['#050505', '#c9c9c9', '#4a4a4a'],
     effect: 'grain'
   },
   {
-    id: 'blockbuster',
-    name: 'Estreno Blockbuster',
-    description: 'Rojo y amarillo de cartel de estreno, con flashes de cámaras.',
+    id: 'grindhouse',
+    name: 'Sesión Grindhouse',
+    description: 'Rojo y ámbar saturados de copia quemada, con flashes de cámaras.',
     cost: 30,
     badge: 'EXCLUSIVO',
-    swatch: ['#1a0500', '#ffcc00', '#e11d1d'],
+    swatch: ['#180400', '#ff3b1f', '#ffcc00'],
     effect: 'flash'
   }
 ];

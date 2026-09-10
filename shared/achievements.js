@@ -2,7 +2,7 @@
 // en localStorage. Los logros se calculan siempre a partir de `stats`, nunca
 // se guardan como "desbloqueado" por separado.
 const KEY = 'mastercinema.stats';
-const CATEGORIES = ['directors', 'actors', 'quotes', 'years'];
+const CATEGORIES = ['directors', 'actors', 'quotes', 'years', 'soundtracks'];
 
 export const ACHIEVEMENTS = [
   { id: 'directors-bronze', category: 'directors', medal: 'bronze', name: 'Primera Toma', description: 'Acierta 5 de 10 preguntas en una partida de Directores.' },
@@ -17,6 +17,9 @@ export const ACHIEVEMENTS = [
   { id: 'years-bronze', category: 'years', medal: 'bronze', name: 'Cronista de Cine', description: 'Acierta 5 de 10 preguntas en Años de Estreno.' },
   { id: 'years-silver', category: 'years', medal: 'silver', name: 'Maratón sin Fallos', description: 'Encadena 7 aciertos seguidos, sin importar la categoría.' },
   { id: 'years-gold', category: 'years', medal: 'gold', name: 'Leyenda de MasterCinema', description: 'Consigue el logro de oro en Directores, Actores y Frases Icónicas.' },
+  { id: 'soundtracks-bronze', category: 'soundtracks', medal: 'bronze', name: 'Oído Musical', description: 'Acierta 5 de 10 preguntas en una partida de Bandas Sonoras.' },
+  { id: 'soundtracks-silver', category: 'soundtracks', medal: 'silver', name: 'Compositor en Ciernes', description: 'Acierta 8 de 10 preguntas en una partida de Bandas Sonoras.' },
+  { id: 'soundtracks-gold', category: 'soundtracks', medal: 'gold', name: 'Maestro de la Partitura', description: 'Consigue una partida perfecta (10/10) en Bandas Sonoras.' },
   { id: 'marathon-fire', category: 'marathon', medal: 'bronze', name: 'Racha de Fuego', description: 'Alcanza una racha de 10 en el modo Maratón.' },
   { id: 'marathon-noassist', category: 'marathon', medal: 'silver', name: 'Sin Ayuda', description: 'Alcanza una racha de al menos 10 en Maratón sin usar ningún comodín.' },
   { id: 'marathon-strategist', category: 'marathon', medal: 'silver', name: 'Estratega', description: 'Usa los 3 comodines en una misma partida de Maratón.' },
@@ -131,6 +134,9 @@ export function getAchievementState(stats) {
     'years-bronze': stats.years.bestCorrect >= 5,
     'years-silver': stats.crossStreak.best >= 7,
     'years-gold': goldDirectors && goldActors && goldQuotes,
+    'soundtracks-bronze': stats.soundtracks.bestCorrect >= 5,
+    'soundtracks-silver': stats.soundtracks.bestCorrect >= 8,
+    'soundtracks-gold': stats.soundtracks.perfectRounds >= 1,
     'marathon-fire': stats.marathon.bestStreak >= 10,
     'marathon-noassist': stats.marathon.noHelpBestStreak >= 10,
     'marathon-strategist': stats.marathon.usedAllThreeInOneRun,

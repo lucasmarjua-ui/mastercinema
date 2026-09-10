@@ -1,51 +1,41 @@
 import { useState } from 'react';
-import { Bookmark, Film, Heart, Menu, SkipBack, SkipForward, X } from 'lucide-react';
-import BoomerangVideoBg from './BoomerangVideoBg';
+import { Film, Menu, SkipBack, SkipForward, X } from 'lucide-react';
+import CountdownBg from './CountdownBg';
 import ReelMark from './ReelMark';
-import { FEATURED_MOVIES } from './movies';
+import { TRIVIA_FACTS } from './trivia-facts';
 
-// Clip corto con licencia libre para uso comercial (Pexels License, sin
-// atribución obligatoria): "A red curtain with a black background", de
-// cottonbro studio. https://www.pexels.com/video/a-red-curtain-with-a-black-background-4722613/
-const VIDEO_SRC = 'https://videos.pexels.com/video-files/4722613/4722613-sd_960_506_25fps.mp4';
-
-const NAV_LINKS: { label: string; selector: string | null }[] = [
-  { label: 'Catálogo', selector: '#category-grid' },
-  { label: 'Directores', selector: '[data-category="directors"]' },
-  { label: 'Reseñas', selector: 'footer' },
-  { label: 'Sala de proyección', selector: '.marathon-card' },
+const NAV_LINKS: { label: string; action: () => void }[] = [
+  { label: 'Categorías', action: () => scrollToSelector('#category-grid') },
+  { label: 'Modo Maratón', action: () => scrollToSelector('.marathon-card') },
+  { label: 'Tienda', action: () => scrollToSelector('.theme-shop') },
+  { label: 'Ranking', action: () => document.querySelector('#ranking-open')?.dispatchEvent(new MouseEvent('click', { bubbles: true })) }
 ];
 
-function scrollToSelector(selector: string | null) {
-  if (!selector) return;
+function scrollToSelector(selector: string) {
   document.querySelector(selector)?.scrollIntoView({ behavior: 'smooth', block: 'start' });
 }
 
 export default function Hero() {
   const [menuOpen, setMenuOpen] = useState(false);
-  const [movieIndex, setMovieIndex] = useState(0);
-  const [watchlisted, setWatchlisted] = useState(false);
+  const [factIndex, setFactIndex] = useState(0);
+  const fact = TRIVIA_FACTS[factIndex];
 
-  const movie = FEATURED_MOVIES[movieIndex];
-
-  function goToNavLink(selector: string | null) {
+  function runNavAction(action: () => void) {
     setMenuOpen(false);
-    scrollToSelector(selector);
+    action();
   }
 
-  function showPreviousMovie() {
-    setMovieIndex((current) => (current === 0 ? FEATURED_MOVIES.length - 1 : current - 1));
-    setWatchlisted(false);
+  function showPreviousFact() {
+    setFactIndex((current) => (current === 0 ? TRIVIA_FACTS.length - 1 : current - 1));
   }
-  function showNextMovie() {
-    setMovieIndex((current) => (current === FEATURED_MOVIES.length - 1 ? 0 : current + 1));
-    setWatchlisted(false);
+  function showNextFact() {
+    setFactIndex((current) => (current === TRIVIA_FACTS.length - 1 ? 0 : current + 1));
   }
 
   return (
     <div className="relative h-screen w-full overflow-hidden bg-black font-sans text-white">
-      <BoomerangVideoBg src={VIDEO_SRC} />
-      <div className="absolute inset-0 z-[1] bg-gradient-to-b from-black/75 via-black/35 to-black/80" />
+      <CountdownBg />
+      <div className="absolute inset-0 z-[1] bg-gradient-to-b from-black/70 via-black/30 to-black/85" />
 
       <header className="absolute inset-x-0 top-0 z-20 flex items-center justify-between px-6 py-5 md:px-10">
         <a href="#" className="flex items-center gap-2 text-white no-underline">
@@ -58,7 +48,7 @@ export default function Hero() {
             <button
               key={link.label}
               type="button"
-              onClick={() => goToNavLink(link.selector)}
+              onClick={() => runNavAction(link.action)}
               className="transition-colors hover:text-white"
             >
               {link.label}
@@ -66,27 +56,14 @@ export default function Hero() {
           ))}
         </nav>
 
-        <div className="flex items-center gap-3">
-          <button
-            type="button"
-            className="liquid-glass flex items-center gap-2 rounded-full py-1 pl-1 pr-4 text-sm text-white"
-            aria-label="Ver watchlist"
-          >
-            <span className="grid h-8 w-8 place-items-center rounded-full bg-brand">
-              <Bookmark className="h-4 w-4" />
-            </span>
-            <span className="hidden sm:inline">Watchlist (0)</span>
-            <span className="sm:hidden">(0)</span>
-          </button>
-          <button
-            type="button"
-            onClick={() => setMenuOpen((open) => !open)}
-            className="liquid-glass grid h-10 w-10 place-items-center rounded-full text-white md:hidden"
-            aria-label={menuOpen ? 'Cerrar menú' : 'Abrir menú'}
-          >
-            {menuOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
-          </button>
-        </div>
+        <button
+          type="button"
+          onClick={() => setMenuOpen((open) => !open)}
+          className="liquid-glass grid h-10 w-10 place-items-center rounded-full text-white md:hidden"
+          aria-label={menuOpen ? 'Cerrar menú' : 'Abrir menú'}
+        >
+          {menuOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
+        </button>
       </header>
 
       {menuOpen && (
@@ -96,7 +73,7 @@ export default function Hero() {
               <button
                 key={link.label}
                 type="button"
-                onClick={() => goToNavLink(link.selector)}
+                onClick={() => runNavAction(link.action)}
                 className="text-left transition-colors hover:text-white"
               >
                 {link.label}
@@ -108,83 +85,69 @@ export default function Hero() {
 
       <main className="relative z-10 flex h-full flex-col items-center justify-center px-6 text-center">
         <span className="liquid-glass animate-fade-up delay-1 mb-6 inline-flex rounded-full px-4 py-1.5 text-xs tracking-wide text-white/90">
-          Colección 04 · Cine de autor
+          107 preguntas reales · 5 categorías
         </span>
         {/*
-          text-white + font-sans + [text-shadow:none] se declaran explícitos
-          (no solo heredados) porque shared/theme.css define un h1 global
-          (Playfair Display, color crema, sombra dorada) que, al ser una
-          coincidencia directa sobre el propio elemento, ganaría a cualquier
-          estilo solo heredado de un ancestro -- ver el hero.html real.
+          text-white + font-display + [text-shadow:none] se declaran explícitos
+          (no solo heredados) porque shared/theme.css define un h1 global que,
+          al ser una coincidencia directa sobre el propio elemento, ganaría a
+          cualquier estilo solo heredado de un ancestro.
         */}
-        <h1 className="animate-fade-up delay-2 max-w-3xl text-4xl font-sans font-semibold leading-[1.05] tracking-tight text-white [text-shadow:none] sm:text-6xl md:text-7xl">
-          películas que se quedan
+        <h1 className="animate-fade-up delay-2 max-w-3xl font-display text-4xl font-black leading-[1.05] tracking-tight text-white [text-shadow:none] sm:text-6xl md:text-7xl">
+          tu cinefilia,
           <br />
-          contigo después.
+          contrarreloj.
         </h1>
         <p className="animate-fade-up delay-3 mt-6 max-w-xl text-base text-white/70 sm:text-lg">
-          Cine de autor, clásicos restaurados y joyas ocultas. Un catálogo curado, no un scroll
-          infinito.
+          Directores, actores, citas, años y bandas sonoras. Elige categoría o entra en Modo
+          Maratón: la racha multiplica tus puntos mientras aciertes.
         </p>
         <div className="animate-fade-up delay-4 mt-9 flex flex-col items-center gap-4 sm:flex-row">
           <button
             type="button"
             onClick={() => scrollToSelector('#category-grid')}
-            className="rounded-full bg-white px-7 py-3 text-sm font-medium text-black transition-colors hover:bg-white/90"
+            className="rounded-full bg-amber px-7 py-3 text-sm font-bold text-black transition-colors hover:bg-amber-bright"
           >
-            Explorar el catálogo
+            Elegir categoría
           </button>
           <button
             type="button"
             onClick={() => scrollToSelector('.marathon-card')}
             className="liquid-glass rounded-full px-7 py-3 text-sm font-medium text-white"
           >
-            Novedades
+            Modo Maratón
           </button>
         </div>
       </main>
 
       <div className="animate-fade-up delay-5 absolute bottom-6 right-6 z-20 hidden w-72 sm:block">
-        <div className="liquid-glass rounded-2xl p-4 text-white">
+        <div className="liquid-glass rounded-2xl p-4 text-left text-white">
           <div className="flex items-center gap-3">
-            <span className="grid h-10 w-10 flex-none place-items-center rounded-lg bg-brand">
-              <Film className="h-5 w-5 text-white" />
+            <span className="grid h-10 w-10 flex-none place-items-center rounded-lg bg-amber">
+              <Film className="h-5 w-5 text-black" />
             </span>
-            <div className="min-w-0 flex-1 text-left">
-              <p className="text-xs text-white/60">En cartelera</p>
-              <p className="truncate text-sm font-medium">
-                {movie.title} <span className="text-white/50">· {movie.year}</span>
-              </p>
+            <div className="min-w-0 flex-1">
+              <p className="text-xs text-white/60">Dato curioso</p>
+              <p className="truncate text-sm font-medium">{fact.title}</p>
             </div>
-            <button
-              type="button"
-              onClick={() => setWatchlisted((value) => !value)}
-              aria-label={watchlisted ? 'Quitar de watchlist' : 'Añadir a watchlist'}
-              className="flex-none"
-            >
-              <Heart
-                className={
-                  watchlisted ? 'h-5 w-5 fill-gold text-gold' : 'h-5 w-5 text-white/50 hover:text-white'
-                }
-              />
-            </button>
           </div>
+          <p className="mt-3 text-xs leading-relaxed text-white/70">{fact.detail}</p>
           <div className="mt-4 flex items-center justify-between">
             <button
               type="button"
-              onClick={showPreviousMovie}
-              aria-label="Película anterior"
+              onClick={showPreviousFact}
+              aria-label="Dato anterior"
               className="liquid-glass grid h-8 w-8 place-items-center rounded-full"
             >
               <SkipBack className="h-3.5 w-3.5" />
             </button>
             <span className="text-[11px] text-white/50">
-              {movieIndex + 1} / {FEATURED_MOVIES.length}
+              {factIndex + 1} / {TRIVIA_FACTS.length}
             </span>
             <button
               type="button"
-              onClick={showNextMovie}
-              aria-label="Película siguiente"
+              onClick={showNextFact}
+              aria-label="Dato siguiente"
               className="liquid-glass grid h-8 w-8 place-items-center rounded-full"
             >
               <SkipForward className="h-3.5 w-3.5" />
