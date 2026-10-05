@@ -1,11 +1,17 @@
-import { getFirestore, collection, doc, getDoc, getDocs, limit, orderBy, query, setDoc } from 'https://www.gstatic.com/firebasejs/10.13.0/firebase-firestore.js';
-import { firebaseApp } from './firebase-config.js';
+import { loadFirebase } from './firebase-config.js';
 import { getCurrentUser } from './auth.js';
 
-const db = getFirestore(firebaseApp);
+let db, collection, doc, getDoc, getDocs, limit, orderBy, query, setDoc;
+const firebaseReady = loadFirebase().then(firebase => {
+  if (!firebase) return false;
+  ({ db } = firebase);
+  ({ collection, doc, getDoc, getDocs, limit, orderBy, query, setDoc } = firebase.firestoreApi);
+  return true;
+});
 
 // Envía la puntuación al ranking público de la categoría, solo si mejora la guardada.
 export async function submitScore(category, score) {
+  if (!(await firebaseReady)) return false;
   const user = getCurrentUser();
   const value = Math.max(0, Math.floor(Number(score) || 0));
   if (!user || !value) return false;
@@ -17,6 +23,7 @@ export async function submitScore(category, score) {
 }
 
 export async function getTopScores(category, max = 10) {
+  if (!(await firebaseReady)) return [];
   const scores = await getDocs(query(collection(db, 'leaderboards', category, 'entries'), orderBy('score', 'desc'), limit(Math.max(1, Math.min(50, max)))));
   return scores.docs.map(entry => ({ username: entry.data().username || 'JUGADOR', score: Number(entry.data().score || 0) }));
 }
