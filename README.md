@@ -2,179 +2,207 @@
 
 [![Deploy to GitHub Pages](https://github.com/lucasmarjua-ui/mastercinema/actions/workflows/deploy.yaml/badge.svg)](https://github.com/lucasmarjua-ui/mastercinema/actions/workflows/deploy.yaml)
 [![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
-[![Demo en vivo](https://img.shields.io/badge/demo-en%20vivo-brightgreen)](https://lucasmarjua-ui.github.io/mastercinema/)
-![Vanilla + hero en React](https://img.shields.io/badge/juego-vanilla%20JS-orange) ![Hero](https://img.shields.io/badge/hero-React%20%2B%20TS%20%2B%20Tailwind-blue)
+[![Live demo](https://img.shields.io/badge/demo-live-brightgreen)](https://lucasmarjua-ui.github.io/mastercinema/)
+![Game: vanilla JS](https://img.shields.io/badge/game-vanilla%20JS-orange)
+![Hero: React + TS + Tailwind](https://img.shields.io/badge/hero-React%20%2B%20TS%20%2B%20Tailwind-blue)
 
-MasterCinema es un juego de trivia de cine, estático y responsive. La identidad visual es **"Leader"**: el cabo de cuenta atrás (8-7-6-5...) que abre las copias de proyección de 35mm — negro de sala, papel y un acento ámbar de línea de tiempo, círculos concéntricos, tipografía geométrica gruesa (Archivo + Inter). Nada de alfombra roja ni dorado de gala: esto es la cabina de proyección, no el estreno. El sitio en sí (categorías, partidas, tiendas, cuentas, ranking) es HTML, CSS y JavaScript vanilla, sin frameworks ni build step. La única excepción es el hero de portada de `index.html`, en React + TypeScript + Tailwind, que se compila aparte a un bundle estático (ver [Hero de portada](#hero-de-portada)).
+MasterCinema is a static, responsive film trivia game. Its visual identity is **"Leader"**: the 8-7-6-5 countdown that opens a 35mm print. Cinema black, paper and a single amber accent, concentric circles and heavy geometric type (Archivo + Inter). This is the projection booth, not the red carpet.
 
-**[▶ Jugar ahora](https://lucasmarjua-ui.github.io/mastercinema/)**
+The game itself (categories, rounds, shops, accounts, leaderboards) is plain HTML, CSS and vanilla JavaScript with no framework or build step. The one exception is the landing hero, built in React + TypeScript + Tailwind and compiled separately to a static bundle (see [Landing hero](#landing-hero)). The in-game interface is in Spanish.
 
-## Jugar localmente
+**[▶ Play now](https://lucasmarjua-ui.github.io/mastercinema/)**
 
-El sitio en sí no tiene dependencias ni build step, pero `index.html` carga el hero de portada ya compilado desde `dist/`, así que hace falta generarlo una vez:
+## Screenshots
+
+| | |
+|---|---|
+| ![Lobby](screenshots/vestibulo.png) **Lobby:** categories, Marathon mode and shops | ![Marathon mode](screenshots/maraton.png) **Marathon mode:** streak, multiplier and lifelines |
+| ![Marathon summary](screenshots/resumen.png) **Summary** at the end of a streak | ![My profile](screenshots/perfil.png) **My profile:** player statistics |
+
+## Contents
+
+- [Play locally](#play-locally)
+- [How to play](#how-to-play)
+- [Architecture](#architecture)
+- [Question bank](#question-bank)
+- [Visual identity: "Leader"](#visual-identity-leader)
+- [Game feel and sound](#game-feel-and-sound)
+- [Reels, themes and achievements](#reels-themes-and-achievements)
+- [Marathon mode and lifelines](#marathon-mode-and-lifelines)
+- [Accounts and leaderboards (Firebase)](#accounts-and-leaderboards-firebase)
+- [Landing hero](#landing-hero)
+- [Technical decisions](#technical-decisions)
+- [Deployment](#deployment)
+- [Roadmap](#roadmap)
+
+## Play locally
+
+The game has no dependencies or build step, but `index.html` loads the compiled hero from `dist/`, so build it once:
 
 ```bash
 npm install
-npm run build   # deja dist/mastercinema-hero.js y dist/mastercinema-hero.css listos
+npm run build   # writes dist/mastercinema-hero.js and dist/mastercinema-hero.css
 ```
 
-Al usar módulos ES nativos, además hace falta servir los archivos (abrir `index.html` con doble clic no funciona por las políticas de CORS de `file://`). Sirve la raíz con cualquier servidor estático, por ejemplo:
+The site uses native ES modules, so it must be served over HTTP (opening `index.html` from `file://` is blocked by CORS). Serve the root with any static server:
 
 ```bash
 python -m http.server 8000
 ```
 
-Luego visita `http://localhost:8000`. Para iterar solo sobre el hero con recarga en caliente, sin el resto del sitio, usa `npm run dev` (sirve `src/hero/dev/` de forma aislada).
+Then visit `http://localhost:8000`. To work on the hero alone with hot reload, run `npm run dev` (serves `src/hero/dev/` in isolation).
 
-## Cómo se juega
+## How to play
 
-1. En la pantalla de inicio, elige una de las cinco categorías: **Directores**, **Actores y Personajes**, **Frases Icónicas**, **Años de Estreno** o **Bandas Sonoras**.
-2. Responde una ronda de 10 preguntas de opción múltiple, elegidas al azar del banco de esa categoría. Cada pregunta tiene un temporizador circular de 15 segundos (con tic-tac en los últimos 5) y una transición de iris (el cierre circular clásico de montaje de cine mudo) al pasar a la siguiente: si se agota el tiempo, cuenta como fallo.
-3. Cada acierto suma puntos (entre 50 y 150, según la rapidez de la respuesta) y reproduce un aplauso con destello ámbar; cada fallo suena a buzzer/gong, sacude el botón en rojo y muestra la respuesta correcta. Los fallos no restan puntos.
-4. Al terminar las 10 preguntas aparece la pantalla de resultados con aciertos, fallos, puntuación y **bobinas** ganadas (la moneda del juego, según la puntuación), con botones para jugar de nuevo, cambiar de categoría o ver tus **logros**.
-5. Las bobinas se gastan en la **tienda de temas** de la pantalla de inicio: 4 paletas visuales completas para equipar.
-6. Si inicias sesión (nombre de usuario y contraseña), tu progreso se sincroniza en la nube y tus mejores puntuaciones entran al **ranking global** por categoría.
-7. En **Modo Maratón** (sexta tarjeta, distinta a las demás) las preguntas de las 5 categorías se mezclan sin repetir hasta agotar el pool, sin número fijo de preguntas: sigues mientras aciertes. La racha multiplica tus puntos (x1, x1.5 desde 5, x2 desde 10, x3 desde 20) y tienes 3 comodines —**50:50**, **Pasar** y **Chivato**— para salvar una respuesta.
+1. Pick one of five categories on the home screen: **Directores** (directors), **Actores y Personajes** (actors and characters), **Frases Icónicas** (iconic quotes), **Años de Estreno** (release years) or **Bandas Sonoras** (soundtracks).
+2. Answer a round of 10 multiple-choice questions drawn at random from that category. Each question has a 15-second circular timer (ticking for the last 5) and an iris transition to the next one. Running out of time counts as a miss.
+3. Correct answers score 50 to 150 points depending on speed, with applause and an amber flash. Misses play a buzzer, shake the button red and reveal the right answer. Misses never subtract points.
+4. After 10 questions, the results screen shows hits, misses, score and the **reels** earned (the in-game currency), with buttons to replay, change category or view **achievements**.
+5. Reels are spent in the **theme shop**: four complete visual palettes to equip.
+6. Logged-in players sync their progress to the cloud and their best scores enter the per-category **global leaderboard**.
+7. **Marathon mode** mixes all five categories without repeats until the pool runs out. There is no fixed length: you keep going while you keep answering correctly. The streak multiplies your points, and three lifelines (**50:50**, **Pasar**/skip and **Chivato**/hint) can save an answer.
 
-## Arquitectura
+## Architecture
 
 ```text
-index.html                 Pantalla de inicio, categorías, tienda de temas, login y ranking
-game.html                  Pantalla de juego: preguntas, temporizador, resultados y logros
-shared/theme.css           Paleta "Leader", tipografía, layout responsive y temas visuales completos
-shared/questions.js        Banco de preguntas por categoría (107 preguntas, 5 categorías)
-shared/quiz-engine.js      Selección de preguntas, orden de opciones y puntuación
-shared/audio.js            Aplausos, buzzer y tic-tac sintetizados con Web Audio API
-shared/wallet.js           Monedero de "bobinas" persistido en localStorage
-shared/themes.js           Catálogo de temas visuales, compra y equipamiento
-shared/achievements.js     Estadísticas y logros (bronce/plata/oro) por categoría
-shared/firebase-config.js  Configuración e inicialización del SDK Firebase CDN
-shared/auth.js             Registro, login con usuario/contraseña, invitado y sincronización Firestore
-shared/leaderboard.js      Envío y lectura del ranking global en Firestore (por categoría y de mejor racha)
-shared/wildcards.js        Catálogo de comodines de Maratón, usos base y compra de usos extra
-firestore.rules            Reglas de seguridad del proyecto Firebase (referencia, se pegan en la consola)
-src/hero/                  Hero de portada: React + TypeScript + Tailwind (ver más abajo)
-dist/                      Bundle compilado del hero, generado por `npm run build` (no versionado)
-.github/workflows/deploy.yaml   Compila el hero e instala en GitHub Pages en cada push a main
+index.html                 Home: categories, theme shop, login and leaderboards
+game.html                  Game screen: questions, timer, results and achievements
+shared/theme.css           "Leader" palette, typography, responsive layout and full themes
+shared/questions.js        Question bank (107 questions in 5 categories)
+shared/quiz-engine.js      Question selection, option shuffling and scoring
+shared/audio.js            Applause, buzzer and ticking synthesised with the Web Audio API
+shared/wallet.js           "Reels" wallet stored in localStorage
+shared/themes.js           Visual theme catalogue, purchases and equipping
+shared/achievements.js     Per-category statistics and bronze/silver/gold achievements
+shared/firebase-config.js  Firebase config and lazy SDK loader
+shared/auth.js             Sign-up, login, guest mode and Firestore sync
+shared/leaderboard.js      Global leaderboards (per category and best Marathon streak)
+shared/wildcards.js        Marathon lifelines: base uses and extra purchases
+firestore.rules            Firestore security rules (reference copy, pasted into the console)
+src/hero/                  Landing hero: React + TypeScript + Tailwind
+dist/                      Compiled hero bundle from `npm run build` (not committed)
+.github/workflows/deploy.yaml   Builds the hero and deploys to GitHub Pages on every push to main
 ```
 
-## Banco de preguntas
+## Question bank
 
-`shared/questions.js` tiene **107 preguntas reales y verificables** repartidas en 5 categorías (directores, intérpretes, citas, años de estreno y compositores de bandas sonoras — ningún dato inventado):
+`shared/questions.js` contains **107 real, verifiable questions** in five categories. No facts are invented.
 
-| Categoría | Preguntas |
+| Category | Questions |
 |---|---|
-| Directores | 25 |
-| Actores y Personajes | 24 |
-| Años de Estreno | 23 |
-| Bandas Sonoras | 18 |
-| Frases Icónicas | 17 |
+| Directors | 25 |
+| Actors and Characters | 24 |
+| Release Years | 23 |
+| Soundtracks | 18 |
+| Iconic Quotes | 17 |
 | **Total** | **107** |
 
-### Cómo agregar preguntas
+### Adding questions
 
-Cada categoría es un objeto con `label`, `description` e `items`. Cada `item` tiene `q` (el enunciado), `correct` (la respuesta correcta) y `wrong` (un array con las 3 opciones falsas). No hace falta tocar `game.html` ni `quiz-engine.js`: el motor arma la ronda, baraja el orden de las opciones y recicla el banco si una categoría tiene menos de 10 preguntas (ninguna la tiene ahora mismo). Añadir una categoría nueva tampoco requiere tocar el motor —`buildRound`/`createMarathonDeck` leen `Object.entries(QUESTIONS)` de forma genérica—, pero si quieres que tenga sus propios logros hay que añadir su id a `CATEGORIES` en `shared/achievements.js` y a la lista de merge de `shared/auth.js`.
+Each category is an object with `label`, `description` and `items`. Each item has `q` (the question), `correct` (the right answer) and `wrong` (an array of three wrong options). Neither `game.html` nor `quiz-engine.js` needs to change: the engine builds the round, shuffles the options and recycles the bank if a category has fewer than 10 questions.
 
-## Identidad visual: "Leader"
+A new category also needs no engine changes, because `buildRound` and `createMarathonDeck` read `Object.entries(QUESTIONS)` generically. To give it its own achievements, add its id to `CATEGORIES` in `shared/achievements.js` and to the merge list in `shared/auth.js`.
 
-La referencia es el cabo de cuenta atrás de 35mm, no la alfombra roja: negro de sala (`--ink`), papel (`--paper`) y ámbar (`--amber`) como único acento de marca, con círculos concéntricos y tics de graduación como motivo recurrente (divisores, temporizador, fondo del hero). Tipografía: **Archivo** (800/900, geométrica y muy gruesa) para titulares, **Inter** para cuerpo e interfaz — ambas de Google Fonts, con licencia abierta.
+## Visual identity: "Leader"
 
-Motivos propios de esta vuelta de diseño:
+The reference is the 35mm countdown leader: cinema black (`--ink`), paper (`--paper`) and amber (`--amber`) as the only brand accent, with concentric circles and tick marks as a recurring motif (dividers, timer, hero background). Type is **Archivo** (800/900) for headings and **Inter** for body and UI, both open-licence Google Fonts.
 
-- **Temporizador circular** (`.timer-ring`): un `conic-gradient` que se vacía en sentido horario con el segundero, con el número de segundos restantes en el centro; se pone rojo en los últimos segundos.
-- **Transición de iris** (`.iris-wipe`, antes una barra lateral): el cierre circular clásico del montaje de cine mudo, vía `clip-path: circle()` animado, entre pregunta y pregunta.
-- **Iconografía CSS pura**: claqueta, estrella, comillas y rollo de película (heredados, redibujados en ámbar) más un ecualizador de barras nuevo para Bandas Sonoras — todo con gradientes, `clip-path` y pseudo-elementos, sin imágenes.
-- **Racha de Maratón**: la llama ya existente se conserva (encaja mejor que nunca: el ámbar ya es el color de marca) con sus mismos tramos de intensidad.
+- **Circular timer** (`.timer-ring`): a `conic-gradient` that empties clockwise with the seconds left shown in the centre, turning red at the end.
+- **Iris transition** (`.iris-wipe`): the classic silent-film circular wipe between questions, via an animated `clip-path: circle()`.
+- **Pure-CSS icons**: clapperboard, star, quotes, film reel and an equaliser for Soundtracks, all built from gradients, `clip-path` and pseudo-elements with no images.
 
-## Sonido y sensación de juego
+## Game feel and sound
 
-Todos los efectos se sintetizan en tiempo real con la Web Audio API (`shared/audio.js`), sin archivos de audio externos: un aplauso (ráfagas de ruido filtrado) al acertar, un buzzer/gong grave (dos osciladores desafinados) al fallar, y un tic-tac que arranca en los últimos 5 segundos de cada pregunta. El botón **Sonido** silencia todo. Al acertar, el botón elegido destella en ámbar; al fallar, tiembla en rojo y se resalta la respuesta correcta.
+Every sound is synthesised in real time with the Web Audio API (`shared/audio.js`), with no audio files: applause (filtered noise bursts) for a correct answer, a low buzzer (two detuned oscillators) for a miss, and a tick for the last five seconds of each question. The **Sound** button mutes everything.
 
-## Bobinas y tienda de temas
+## Reels, themes and achievements
 
-Cada partida entrega bobinas según la puntuación conseguida (`reelsForScore` en `shared/wallet.js`). La tienda de `index.html` ofrece 4 temas visuales completos —no solo un color de acento, sino toda la paleta vía variables CSS en `[data-theme="id"]`—: **Leader** (incluido), **Bandas SMPTE** (15 bobinas, magenta/cian de calibración de imagen), **Cinerama Noir** (20 bobinas, blanco y negro con grano de película y parpadeo de proyector) y **Sesión Grindhouse** (30 bobinas, exclusivo, rojo/ámbar saturados con flashes de cámaras al equiparlo).
+Each game awards reels based on the score (`reelsForScore` in `shared/wallet.js`). The shop sells four complete themes, each redefining the whole palette through CSS variables on `[data-theme="id"]`:
 
-## Logros
+| Theme | Price | Look |
+|---|---|---|
+| **Leader** | Included | Cinema black, paper and amber |
+| **Bandas SMPTE** | 15 reels | Calibration magenta and cyan |
+| **Cinerama Noir** | 20 reels | Black and white with film grain and projector flicker |
+| **Sesión Grindhouse** | 30 reels (exclusive) | Saturated red and amber with camera flashes |
 
-`shared/achievements.js` deriva **19 logros** (15 por categoría clásica —3 por cada una de las 5—, bronce/plata/oro, más 4 de Maratón) a partir de estadísticas acumuladas en `localStorage`, nunca de flags guardados aparte. Incluye una racha global entre categorías y un logro meta (oro de Años de Estreno = oro en Directores, Actores y Frases Icónicas). El botón **Ver logros** de la pantalla de resultados abre el detalle de conseguidos y pendientes.
+`shared/achievements.js` derives **19 achievements** (three bronze/silver/gold per category plus four for Marathon) from cumulative statistics in `localStorage`, never from separately stored flags. They include a cross-category streak and a meta achievement. **View achievements** on the results screen lists earned and pending ones.
 
-## Modo Maratón y comodines
+**My profile** (when logged in) shows the best Marathon streak, games played, overall accuracy, favourite category, and owned themes and lifelines, all derived by `getProfileSummary` in `shared/achievements.js`.
 
-`shared/quiz-engine.js` expone `createMarathonDeck()` (mazo con las 5 categorías mezcladas, sin repetir hasta agotar el pool) y `computeMarathonScore()` (puntuación base multiplicada según la racha: x1 de 0 a 4, x1.5 de 5 a 9, x2 de 10 a 19, x3 desde 20). El destello de combo (`Audio.playCombo`) se intensifica en esos mismos tramos, y un destello de confeti (`spawnConfetti` en `game.html`) más un arpegio (`Audio.playRecord`) celebran cada vez que se supera el récord personal de racha (`stats.marathon.bestStreak`, sincronizado en Firestore igual que el resto de estadísticas).
+## Marathon mode and lifelines
 
-Cada partida arranca con 1 uso de cada comodín (`shared/wildcards.js`): **50:50** (elimina 2 respuestas incorrectas), **Pasar** (descarta la pregunta sin romper la racha) y **Chivato** (resalta la respuesta correcta; cuenta como acierto pero con puntos base reducidos a la mitad, sin bonus por rapidez). La **tienda de comodines** de `index.html` vende usos extra permanentes (10 bobinas cada uno) que se suman al uso base en cada partida nueva.
+`shared/quiz-engine.js` exposes `createMarathonDeck()` (all five categories shuffled without repeats) and `computeMarathonScore()`, which multiplies base points by the current streak:
 
-Al fallar sin comodín que salve la respuesta termina la partida y aparece el **resumen de Maratón**: racha final, puntos, comodines usados y bobinas ganadas (cada tarjeta con su icono y los números contando hacia arriba al aparecer), aviso de nuevo récord si corresponde (con brillo ámbar más marcado en las tarjetas), y un botón **Compartir resultado** que copia al portapapeles un texto tipo "He conseguido una racha de X en MasterCinema 🎬🔥". La mejor racha también se envía a un ranking global propio (categoría `marathon-streak` en `leaderboards/`), visible desde el selector de la pantalla **Ranking**.
-
-## Mi perfil
-
-Con sesión iniciada, el botón **Mi perfil** de la cabecera abre un modal con la mejor racha histórica de Maratón, partidas jugadas (categorías + Maratón), porcentaje de aciertos global y categoría favorita (la más jugada), además de los temas y comodines ya comprados. Todo se deriva de `shared/achievements.js` (`getProfileSummary`); los contadores `totalCorrect`/`totalAnswered` por categoría, necesarios para el % de aciertos, se guardan igual que el resto de estadísticas y se fusionan en Firestore con la misma lógica de máximos.
-
-## Cuentas y ranking global (Firebase)
-
-MasterCinema usa un proyecto Firebase propio (`mastercinema-trivia`, Authentication + Firestore), independiente de cualquier otro proyecto. Funciona como invitado sin registro: las bobinas, el tema equipado, las estadísticas y los logros se guardan en `localStorage`. Desde **Iniciar sesión** se puede crear una cuenta o entrar con **nombre de usuario y contraseña** (por debajo usa Firebase Authentication con un email generado internamente a partir del nombre de usuario, `usuario@mastercinema.local`; nunca se pide ni se muestra un email real). Al entrar, el progreso local se fusiona con el documento `users/{uid}` de Firestore.
-
-Al terminar una partida con sesión iniciada, si la puntuación supera la guardada, se envía a `leaderboards/{categoria}/entries/{uid}`. La pantalla **Ranking** (botón en la cabecera de inicio) muestra el top 10 por categoría; como invitado se avisa que hace falta iniciar sesión para aparecer.
-
-### Cuenta de pruebas
-
-Para revisar Mi perfil y el ranking sin registrarte: usuario `cinefilo5050`, contraseña `Prueba12345`.
-
-### Configuración pendiente en la consola de Firebase
-
-El proyecto y la app web ya están creados (`mastercinema-trivia`), pero **Firestore y el proveedor de email/contraseña no se pueden activar por API ni por CLI** — Google exige un primer clic manual en la consola para cada uno. Sin estos dos pasos, el login y el ranking no funcionarán (el resto de la web sí):
-
-1. Abre la [consola de Firebase del proyecto](https://console.firebase.google.com/project/mastercinema-trivia/overview).
-2. **Firestore Database → Crear base de datos** (elige una región, por ejemplo `nam5`) — un solo clic, no hace falta configurar nada más.
-3. **Authentication → Comenzar → Sign-in method → Email/contraseña → Habilitar**.
-4. **Authentication → Settings → Authorized domains**: añade `lucasmarjua-ui.github.io` para que el login funcione también en GitHub Pages (además de `localhost`, que ya viene autorizado).
-5. **Firestore Database → Reglas**: pega el contenido de [`firestore.rules`](firestore.rules) y publica.
-
-Después de estos pasos, cuentas, sincronización y ranking funcionan sin tocar código.
-
-## Hero de portada
-
-El bloque de bienvenida a pantalla completa de `index.html` (antes de la selección de categorías) es un componente aislado en **React + TypeScript + Tailwind CSS + Vite**, con iconos de `lucide-react` — la única parte del proyecto con build step. Se compila por separado a un bundle propio (`npm run build` → `dist/mastercinema-hero.js` + `dist/mastercinema-hero.css`) que `index.html` carga con un `<script type="module">`/`<link>` normales, igual que cualquier otro asset estático: Vite no procesa ni toca el resto de la página (categorías, tiendas, modales, el script de juego), que sigue siendo exactamente el mismo HTML/CSS/JS vanilla de siempre, sirviéndose de la cabecera funcional real (bobinas, sonido, login, ranking, perfil) que queda justo debajo del hero.
-
-Piezas propias, en `src/hero/`:
-
-- `CountdownBg.tsx` — fondo animado dibujado enteramente en `<canvas>`: círculos concéntricos, tics de graduación y una cuña ámbar que gira, como el barrido de un cabo de cuenta atrás. Cero vídeo, cero imágenes externas: sin ningún problema de licencia posible (respeta `prefers-reduced-motion`).
-- `Hero.tsx` — cabecera propia (logo, nav funcional, menú móvil), titular con entrada escalonada (`animate-fade-up` + `delay-N`, con `fill-mode: backwards` porque `both`/`forwards` deja un `transform` residual que rompe el `backdrop-filter` de los `.liquid-glass` hijos) y el widget "Dato curioso".
-- `trivia-facts.ts` — los 5 datos que muestra el widget son reales, consistentes con `shared/questions.js` (Tiburón 1975, El Padrino 1972, Star Wars 1977, Titanic 1997, Parásitos 2019): nada inventado.
-
-**Sin vídeo, sin problema de licencia.** La versión anterior del hero usaba un vídeo de Pexels con licencia verificada; en este rediseño se sustituyó por el fondo de `<canvas>` descrito arriba, así que ese problema desaparece por completo — no hay ningún asset de vídeo o imagen de terceros en el hero. La tipografía es Inter + Archivo (Google Fonts, licencia abierta).
-
-**Color de marca "Leader", no el azul de ninguna referencia.** El hero usa exactamente la misma paleta que `shared/theme.css` (`amber`/`amber-bright` en Tailwind = `--amber`/`--amber-bright` en CSS): ámbar en superficies sólidas (CTA principal, icono del widget) y en los acentos de `.liquid-glass`.
-
-**Preflight de Tailwind desactivado.** El reset global de Tailwind (`corePlugins.preflight`) pisaría selectores globales que ya existen en `shared/theme.css` (`h1, h2, h3`, `button`, etc.) para el resto de la página; se desactivó, y los resets que hacían falta dentro del hero (botones sin borde/fondo por defecto) se añadieron con alcance explícito a `#hero-root` en `src/hero/index.css`.
-
-**Nav funcional, no decorativo.** Los 4 enlaces del hero (Categorías, Modo Maratón, Tienda, Ranking) hacen scroll suave a la sección real correspondiente de la página, o —en el caso de Ranking— abren directamente el modal de ranking ya existente. No hay ningún enlace de relleno.
-
-## Decisiones técnicas
-
-**Sin build step ni frameworks, salvo el hero de portada.** El resto del proyecto es HTML, CSS y JavaScript vanilla con módulos ES nativos del navegador, sin paso de compilación. Esto permite que GitHub Pages sirva el repositorio prácticamente tal cual, y que cualquiera pueda clonar el repositorio y abrir el proyecto sin instalar nada más que lo necesario para el hero (`npm install && npm run build`, una sola vez).
-
-**Sin imágenes, vídeos ni fuentes de terceros con derechos dudosos.** No hay carteles ni fotos de películas o actores: toda la identidad visual (círculos de cuenta atrás, claqueta, estrella, comillas, rollo de película, ecualizador) se dibuja con CSS/canvas puro (gradientes, `clip-path`, pseudo-elementos), evitando dependencias de assets binarios y problemas de derechos de autor. El propio fondo del hero es canvas generado, no vídeo.
-
-**Responsive mobile-first.** El layout usa flexbox/grid con unidades relativas y `clamp()`, botones con una altura mínima de 44px para uso táctil, y media queries que colapsan la grilla de categorías y de respuestas a una sola columna en pantallas pequeñas, sin scroll horizontal.
-
-## Capturas
-
-| | |
+| Streak | Multiplier |
 |---|---|
-| ![Vestíbulo](screenshots/vestibulo.png) Vestíbulo: categorías, Modo Maratón y tiendas | ![Modo Maratón](screenshots/maraton.png) Modo Maratón: racha, multiplicador y comodines |
-| ![Resumen de Maratón](screenshots/resumen.png) Resumen al terminar la racha | ![Mi perfil](screenshots/perfil.png) Mi perfil: estadísticas del jugador |
+| 0–4 | ×1 |
+| 5–9 | ×1.5 |
+| 10–19 | ×2 |
+| 20+ | ×3 |
 
-## GitHub Pages
+The combo flash intensifies at the same thresholds, and confetti plus an arpeggio celebrate each new personal best streak (`stats.marathon.bestStreak`, synced to Firestore like the other stats).
 
-El workflow `.github/workflows/deploy.yaml` instala dependencias, compila el hero (`npm ci && npm run build`) y publica el repositorio completo (incluido el `dist/` recién generado) en cada push a `main`. Después de crear el repositorio, activa Pages una sola vez en **Settings → Pages → Source: GitHub Actions**. Ese toggle no se puede configurar mediante Git.
+Every run starts with one use of each lifeline (`shared/wildcards.js`): **50:50** removes two wrong answers, **Pasar** (skip) discards the question without breaking the streak, and **Chivato** (hint) highlights the right answer for half the base points and no speed bonus. The **lifeline shop** sells permanent extra uses for 10 reels each.
 
-El sitio está disponible en `https://lucasmarjua-ui.github.io/mastercinema/`.
+A miss with no lifeline to save it ends the run and shows the **Marathon summary**: final streak, points, lifelines used and reels earned, a new-record notice, and a **Share result** button that copies a short brag to the clipboard. The best streak is also submitted to its own global leaderboard (`marathon-streak` in `leaderboards/`).
+
+## Accounts and leaderboards (Firebase)
+
+MasterCinema uses its own Firebase project (`mastercinema-trivia`, Authentication + Firestore). It is fully playable as a guest, with reels, the equipped theme, statistics and achievements in `localStorage`. **Log in** lets players sign up or log in with a **username and password**; under the hood Firebase Authentication uses a generated `username@mastercinema.local` address, so a real email is never requested. On login, local progress is merged into the `users/{uid}` Firestore document.
+
+After a logged-in game, a score that beats the stored one is written to `leaderboards/{category}/entries/{uid}`. The **Ranking** screen shows the top 10 per category; guests are told they need to log in to appear.
+
+The Firebase SDK is loaded lazily with a dynamic `import()` (`shared/firebase-config.js`). If Google's CDN is blocked by an ad blocker, a corporate proxy or a lost connection, the game still loads and plays as a guest; only accounts and leaderboards are switched off.
+
+### Test account
+
+To try My profile and the leaderboards without signing up: username `cinefilo5050`, password `Prueba12345`.
+
+### Firebase console setup
+
+Firestore and the email/password provider can't be enabled through the API or CLI; each needs one manual click in the console. Without them, login and leaderboards don't work, but the rest of the game does.
+
+1. Open the [project's Firebase console](https://console.firebase.google.com/project/mastercinema-trivia/overview).
+2. **Firestore Database → Create database** (pick a region such as `nam5`).
+3. **Authentication → Get started → Sign-in method → Email/Password → Enable**.
+4. **Authentication → Settings → Authorized domains**: add `lucasmarjua-ui.github.io`.
+5. **Firestore Database → Rules**: paste [`firestore.rules`](firestore.rules) and publish.
+
+## Landing hero
+
+The full-screen welcome block at the top of `index.html` is an isolated **React + TypeScript + Tailwind CSS + Vite** component with `lucide-react` icons, and the only part of the project with a build step. It compiles to its own bundle (`dist/mastercinema-hero.js` + `.css`) that `index.html` loads like any other static asset. Vite never touches the rest of the page, which stays vanilla HTML/CSS/JS.
+
+- `CountdownBg.tsx`: an animated background drawn entirely on `<canvas>` (concentric circles, tick marks and a rotating amber wedge, like a countdown sweep). No video or third-party images, and it respects `prefers-reduced-motion`.
+- `Hero.tsx`: header, working navigation, mobile menu, staggered headline entrance and a "Did you know?" widget. The entrance uses `fill-mode: backwards`, because `both`/`forwards` leaves a residual `transform` that breaks the `backdrop-filter` on the `.liquid-glass` children.
+- `trivia-facts.ts`: the five widget facts are real and consistent with `shared/questions.js`.
+
+Tailwind's **preflight is disabled**, because its global reset would override selectors that `shared/theme.css` already styles for the rest of the page. The few resets the hero needs are scoped to `#hero-root` in `src/hero/index.css`.
+
+The hero's four nav links scroll to the real sections of the page, or open the existing leaderboard dialog. None are placeholders.
+
+## Technical decisions
+
+**No framework or build step, except for the hero.** The game is vanilla HTML, CSS and JavaScript with native ES modules, so GitHub Pages serves the repository almost as-is.
+
+**No third-party images, video or fonts with unclear rights.** There are no film posters or photos of actors: the whole identity (countdown circles, clapperboard, star, quotes, film reel, equaliser) is drawn with CSS and canvas, avoiding binary assets and copyright issues.
+
+**Mobile-first responsive layout.** Flexbox and grid with relative units and `clamp()`, touch targets of at least 44px, and media queries that collapse the category and answer grids to one column on small screens without horizontal scrolling.
+
+## Deployment
+
+The `.github/workflows/deploy.yaml` workflow installs dependencies, builds the hero (`npm ci && npm run build`) and publishes the repository, including the fresh `dist/`, to GitHub Pages on every push to `main`. Pages must be enabled once under **Settings → Pages → Source: GitHub Actions**.
+
+The site is live at <https://lucasmarjua-ui.github.io/mastercinema/>.
 
 ## Roadmap
 
-Ideas futuras: seguir ampliando el banco de preguntas, más categorías (carteles por siluetas, escenas por descripción), notificaciones de logro recién desbloqueado durante la partida, pregunta diaria con recompensa especial, historial de partidas anteriores en Mi perfil.
+- Keep growing the question bank
+- New categories (posters by silhouette, scenes by description)
+- In-game notifications for newly unlocked achievements
+- A daily question with a special reward
+- Game history in My profile
 
-## Licencia
+## License
 
-MIT. Copyright Lucas Martinez, 2026. Ver [LICENSE](LICENSE).
+MIT. Copyright Lucas Martinez, 2026. See [LICENSE](LICENSE).
